@@ -1,0 +1,29 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+export default function HomePage() {
+  return (
+    <div className="container py-10">
+      <section className="space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32">
+        <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center mx-auto">
+          <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
+            Welcome to <span className="text-primary font-extrabold">ByteBulletin</span>
+          </h1>
+          <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
+            Your AI-powered news aggregator. Bringing you the world&apos;s top stories, summarized and categorized in real-time.
+          </p>
+          <div className="space-x-4">
+            <Link href="/news">
+              <Button size="lg">Explore News</Button>
+            </Link>
+            <Link href="/login">
+              <Button size="lg" variant="outline">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
