@@ -1,6 +1,6 @@
 // ByteBulletin — Prisma Schema
 // Clean Architecture Data Layer
-// 8 Entities: User, Account, Category, Source, Article, AISummary, Bookmark, UserPreference, RssFetchLog
+// Supports Auth, Domain Entities, Tags, SEO, Analytics, Media, Newsletter, and Global Settings
 
 generator client {
   provider = "prisma-client-js"
@@ -46,6 +46,32 @@ enum ThemePreference {
   LIGHT
   DARK
   SYSTEM
+}
+
+enum NewsletterStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}
+
+enum EventType {
+  PAGEVIEW
+  CLICK
+  AI_SUMMARY_EXPAND
+  SHARE
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
 }
 
 // ─────────────────────────────────────────────
@@ -156,6 +182,18 @@ model Source {
   @@map("sources")
 }
 
+model Tag {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  createdAt   DateTime  @default(now())
+  
+  // Relations
+  articles    Article[] // Implicit many-to-many
+
+  @@map("tags")
+}
+
 model Article {
   id          String        @id @default(cuid())
   title       String
@@ -171,16 +209,19 @@ model Article {
   status      ArticleStatus @default(PUBLISHED)
   viewCount   Int           @default(0)
   isFeatured  Boolean       @default(false)
-  tags        String[]      // PostgreSQL text array
   readingTime Int           @default(1) // Estimated minutes
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   // Relations
-  source    Source      @relation(fields: [sourceId], references: [id])
-  category  Category    @relation(fields: [categoryId], references: [id])
-  aiSummary AISummary?
-  bookmarks Bookmark[]
+  source      Source      @relation(fields: [sourceId], references: [id])
+  category    Category    @relation(fields: [categoryId], references: [id])
+  tags        Tag[]       // Implicit many-to-many
+  aiSummary   AISummary?
+  seo         SeoMetadata?
+  bookmarks   Bookmark[]
+  media       MediaAsset[]
+  analytics   AnalyticsEvent[]
 
   // Indexes for common query patterns
   @@index([publishedAt(sort: Desc), status])
@@ -252,4 +293,95 @@ model RssFetchLog {
 
   @@index([sourceId, fetchedAt(sort: Desc)])
   @@map("rss_fetch_logs")
+}
+
+// ─────────────────────────────────────────────
+// ADVANCED ENTITIES
+// ─────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id          String           @id @default(cuid())
+  email       String           @unique
+  status      NewsletterStatus @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("newsletter_subscribers")
+}
+
+model NewsletterCampaign {
+  id          String         @id @default(cuid())
+  subject     String
+  content     String         @db.Text
+  status      CampaignStatus @default(DRAFT)
+  sentAt      DateTime?
+  sentCount   Int            @default(0)
+  openCount   Int            @default(0)
+  clickCount  Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("newsletter_campaigns")
+}
+
+model GlobalSetting {
+  key         String   @id
+  value       String   @db.Text // JSON stringified value
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("global_settings")
+}
+
+model SeoMetadata {
+  id          String   @id @default(cuid())
+  articleId   String   @unique
+  title       String?  // Override for meta title
+  description String?  @db.Text // Override for meta description
+  ogImage     String?
+  keywords    String[]
+  canonical   String?
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@map("seo_metadata")
+}
+
+model AnalyticsEvent {
+  id          String    @id @default(cuid())
+  eventType   EventType
+  path        String
+  articleId   String?
+  userId      String?   // Optional if authenticated
+  ipHash      String?   // Anonymized IP hash
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  article     Article?  @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, createdAt(sort: Desc)])
+  @@index([articleId])
+  @@map("analytics_events")
+}
+
+model MediaAsset {
+  id          String    @id @default(cuid())
+  url         String
+  key         String    @unique // Storage key (e.g. S3 object key)
+  type        MediaType @default(IMAGE)
+  altText     String?
+  width       Int?
+  height      Int?
+  size        Int?      // Bytes
+  articleId   String?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  article     Article?  @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  @@index([articleId])
+  @@map("media_assets")
 }

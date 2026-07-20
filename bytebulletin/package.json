@@ -16,6 +16,7 @@
     "analyze": "ANALYZE=true npm run build"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.18",
     "@auth/prisma-adapter": "^2.11.2",
     "@base-ui/react": "^1.6.0",
     "@google/generative-ai": "^0.24.1",
@@ -23,6 +24,7 @@
     "@prisma/client": "^7.9.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
+    "ai": "^7.0.31",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -38,6 +40,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "rss-parser": "^3.13.0",
+    "sanitize-html": "^2.17.6",
     "shadcn": "^4.13.1",
     "slugify": "^1.6.9",
     "tailwind-merge": "^3.6.0",
@@ -53,6 +56,7 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
