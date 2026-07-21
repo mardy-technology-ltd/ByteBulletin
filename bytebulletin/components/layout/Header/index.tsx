@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { auth } from "@/lib/auth/config";
 import { LogOut, User } from "lucide-react";
 import { logoutUser } from "@/actions/auth.actions";
+import { MobileNav } from "./mobile-nav";
 
 export async function Header() {
   const session = await auth();
@@ -34,31 +35,34 @@ export async function Header() {
         
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
-            {session?.user ? (
-              <div className="flex items-center gap-4">
-                {session.user.role === "ADMIN" && (
-                  <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-primary">
-                    Dashboard
+            <div className="hidden md:flex items-center gap-2">
+              {session?.user ? (
+                <div className="flex items-center gap-4">
+                  {session.user.role === "ADMIN" && (
+                    <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-primary">
+                      Dashboard
+                    </Link>
+                  )}
+                  <form action={logoutUser}>
+                    <button type="submit" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                    Log in
                   </Link>
-                )}
-                <form action={logoutUser}>
-                  <button type="submit" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-                  Log in
-                </Link>
-                <Link href="/register" className={buttonVariants({ size: "sm" })}>
-                  Sign up
-                </Link>
-              </div>
-            )}
+                  <Link href="/register" className={buttonVariants({ size: "sm" })}>
+                    Sign up
+                  </Link>
+                </div>
+              )}
+            </div>
             <ThemeToggle />
+            <MobileNav session={session} />
           </nav>
         </div>
       </div>

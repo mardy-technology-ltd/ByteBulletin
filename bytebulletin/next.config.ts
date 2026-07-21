@@ -45,13 +45,7 @@ const nextConfig: NextConfig = {
 
   // ── Redirects ────────────────────────────────────────────────
   async redirects() {
-    return [
-      {
-        source: "/admin",
-        destination: "/admin/dashboard",
-        permanent: false,
-      },
-    ];
+    return [];
   },
 
   // ── Experimental ─────────────────────────────────────────────
