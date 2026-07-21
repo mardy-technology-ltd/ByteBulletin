@@ -57,10 +57,10 @@ export function AudioPlayer({ text }: AudioPlayerProps) {
       const utterance = new SpeechSynthesisUtterance(text);
       
       // Try to find a high-quality English voice
-      const bestVoice = voices.find(v => v.name.includes("Natural") && v.lang.startsWith("en")) 
-                     || voices.find(v => v.name.includes("Google UK English Female"))
-                     || voices.find(v => v.name.includes("Google US English"))
-                     || voices.find(v => v.lang.startsWith("en"));
+      const bestVoice = voices.find((v: SpeechSynthesisVoice) => v.name.includes("Natural") && v.lang.startsWith("en")) 
+                     || voices.find((v: SpeechSynthesisVoice) => v.name.includes("Google UK English Female"))
+                     || voices.find((v: SpeechSynthesisVoice) => v.name.includes("Google US English"))
+                     || voices.find((v: SpeechSynthesisVoice) => v.lang.startsWith("en"));
       
       if (bestVoice) {
         utterance.voice = bestVoice;

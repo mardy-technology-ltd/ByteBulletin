@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const results = await ingestDueSources();
     
     // Invalidate Next.js cache so the homepage and categories show new articles instantly
-    if (results.some(r => r.articlesCreated > 0)) {
+    if (results.some((r: any) => r.articlesCreated > 0)) {
       // revalidateTag("articles");
     }
 

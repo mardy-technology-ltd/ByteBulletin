@@ -134,7 +134,7 @@ Do not include markdown code blocks like \`\`\`json. Just the raw JSON object.`,
         data: {
           imageUrl: newImageUrl,
           tags: {
-            connectOrCreate: enhancement.tags.map(tag => {
+            connectOrCreate: enhancement.tags.map((tag: string) => {
               const slug = tag.toLowerCase().replace(/[^a-z0-9]+/g, '-');
               return {
                 where: { slug },

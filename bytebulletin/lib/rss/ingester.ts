@@ -70,7 +70,7 @@ export async function ingestRssFeed(sourceId: string) {
             readingTime,
             // Connect or create tags
             tags: {
-              connectOrCreate: parsed.tags.slice(0, 5).map(tag => ({
+              connectOrCreate: parsed.tags.slice(0, 5).map((tag: any) => ({
                 where: { name: tag },
                 create: { name: tag, slug: generateSlug(tag) },
               })),

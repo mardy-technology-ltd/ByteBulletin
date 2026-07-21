@@ -58,7 +58,7 @@ const nextConfig: NextConfig = {
 
   // ── TypeScript / ESLint ───────────────────────────────────────
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
 
 

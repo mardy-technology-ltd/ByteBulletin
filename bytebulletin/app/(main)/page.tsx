@@ -27,7 +27,7 @@ export default async function Home() {
 
   // Ensure we don't display the featured hero article again in the latest list
   const filteredLatest = featuredHero 
-    ? latestArticles.filter(a => a.id !== featuredHero.id) 
+    ? latestArticles.filter((a: any) => a.id !== featuredHero.id) 
     : latestArticles;
 
   return (
