@@ -1,0 +1,21 @@
+{
+  "name": "ByteBulletin - AI News Aggregator",
+  "short_name": "ByteBulletin",
+  "description": "AI-powered news aggregator that fetches and summarizes the latest tech news.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
