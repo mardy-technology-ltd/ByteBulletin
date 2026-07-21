@@ -93,6 +93,21 @@ export class ArticleRepository {
   }
 
   /**
+   * Fetches a single article by its slug.
+   */
+  static async getBySlug(slug: string) {
+    return prisma.article.findUnique({
+      where: { slug },
+      include: {
+        source: { select: { name: true } },
+        category: { select: { name: true, slug: true } },
+        aiSummary: true,
+        seo: true,
+      },
+    });
+  }
+
+  /**
    * Searches articles by a query string.
    */
   static async search(query: string, page = 1, limit = 12) {

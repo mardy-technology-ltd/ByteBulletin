@@ -12,9 +12,17 @@ import {
   Activity,
   LogOut
 } from "lucide-react";
-import { ThemeToggle } from "@/components/common/theme-toggle";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { auth } from "@/lib/auth/config";
+import { redirect } from "next/navigation";
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  const session = await auth();
+  
+  if (!session || session.user.role !== "ADMIN") {
+    redirect("/");
+  }
+
   const sidebarLinks = [
     { name: "Dashboard", href: "/admin", icon: <LayoutDashboard className="w-5 h-5" /> },
     { name: "Analytics", href: "/admin/analytics", icon: <BarChart className="w-5 h-5" /> },

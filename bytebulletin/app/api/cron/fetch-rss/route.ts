@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     
     // Invalidate Next.js cache so the homepage and categories show new articles instantly
     if (results.some(r => r.articlesCreated > 0)) {
-      revalidateTag("articles");
+      // revalidateTag("articles");
     }
 
     return NextResponse.json({

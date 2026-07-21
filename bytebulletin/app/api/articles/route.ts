@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         orderBy: { publishedAt: "desc" },
         include: {
           category: { select: { name: true, slug: true } },
-          source: { select: { name: true, url: true, logoUrl: true } },
+          source: { select: { name: true, siteUrl: true, logoUrl: true } },
           aiSummary: { select: { summary: true } },
         },
       }),

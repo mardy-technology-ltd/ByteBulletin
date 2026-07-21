@@ -11,14 +11,14 @@ export async function subscribeToNewsletter(formData: FormData) {
     const parsed = emailSchema.safeParse(email);
 
     if (!parsed.success) {
-      return { success: false, error: parsed.error.errors[0].message };
+      return { success: false, error: parsed.error.issues?.[0]?.message || "Invalid email address" };
     }
 
     // Prisma upsert prevents duplicate registration errors
     await prisma.newsletterSubscriber.upsert({
       where: { email: parsed.data },
-      update: { isActive: true }, // Re-subscribe if they had unsubscribed
-      create: { email: parsed.data, isActive: true },
+      update: { status: "ACTIVE" }, // Re-subscribe if they had unsubscribed
+      create: { email: parsed.data, status: "ACTIVE" },
     });
 
     return { success: true, message: "Successfully subscribed!" };

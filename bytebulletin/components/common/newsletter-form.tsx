@@ -5,11 +5,14 @@ import { subscribeToNewsletter } from "@/actions/newsletter.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const initialState = { success: false, error: "", message: "" };
+type FormState = { success: boolean; error?: string; message?: string };
+
+const initialState: FormState = { success: false, error: "", message: "" };
 
 export function NewsletterForm() {
-  const [state, formAction, isPending] = useActionState(async (prevState: any, formData: FormData) => {
-    return await subscribeToNewsletter(formData);
+  const [state, formAction, isPending] = useActionState(async (prevState: FormState, formData: FormData): Promise<FormState> => {
+    const res = await subscribeToNewsletter(formData);
+    return res as FormState;
   }, initialState);
 
   return (

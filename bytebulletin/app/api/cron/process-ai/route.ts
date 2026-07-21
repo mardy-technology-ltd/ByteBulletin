@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     }
 
     // Invalidate caches
-    revalidateTag("articles");
+    // revalidateTag("articles");
 
     return NextResponse.json({
       success: true,

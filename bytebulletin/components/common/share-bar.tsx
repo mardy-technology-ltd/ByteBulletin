@@ -3,12 +3,17 @@
 import { Share2, Link as LinkIcon, Bookmark } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 
+import { BookmarkButton } from "./bookmark-button";
+
 interface ShareBarProps {
   url: string;
   title: string;
+  articleId: string;
+  isAuthenticated: boolean;
+  initialIsBookmarked: boolean;
 }
 
-export function ShareBar({ url, title }: ShareBarProps) {
+export function ShareBar({ url, title, articleId, isAuthenticated, initialIsBookmarked }: ShareBarProps) {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(url);
@@ -42,10 +47,13 @@ export function ShareBar({ url, title }: ShareBarProps) {
       
       <div className="flex-1" />
       
-      <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 text-muted-foreground hover:text-foreground">
-        <Bookmark className="h-5 w-5" />
-        <span className="sr-only">Save article</span>
-      </Button>
+      <BookmarkButton 
+        articleId={articleId} 
+        isAuthenticated={isAuthenticated} 
+        initialIsBookmarked={initialIsBookmarked} 
+        variant="ghost" 
+        className="rounded-full h-10 w-10" 
+      />
     </div>
   );
 }

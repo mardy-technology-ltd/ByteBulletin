@@ -50,7 +50,8 @@ export async function POST(request: Request) {
     const source = await prisma.source.create({
       data: {
         name: body.name,
-        url: body.url || "", // optional root url
+        slug: body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        siteUrl: body.url || "", // optional root url
         feedUrl: body.feedUrl,
         logoUrl: body.logoUrl,
         categoryId: body.categoryId,
