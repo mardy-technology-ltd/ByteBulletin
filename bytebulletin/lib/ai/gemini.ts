@@ -1,8 +1,12 @@
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { AISentiment } from "@prisma/client";
+
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
 // The strict JSON Schema for the AI output
 const ArticleEnhancementSchema = z.object({
@@ -53,7 +57,7 @@ export async function processArticleWithAI(articleId: string) {
   try {
     // 3. Call Google Gemini via AI SDK
     const { object: enhancement, usage } = await generateObject({
-      model: google("models/gemini-1.5-flash"),
+      model: google("gemini-flash-latest"),
       schema: ArticleEnhancementSchema,
       prompt: prompt,
       temperature: 0.2, // Low temperature for consistent formatting
@@ -68,7 +72,7 @@ export async function processArticleWithAI(articleId: string) {
           summary: enhancement.summary,
           keyPoints: enhancement.keyPoints,
           sentiment: enhancement.sentiment as AISentiment,
-          model: "gemini-1.5-flash",
+          model: "gemini-flash-latest",
           tokensUsed: usage.totalTokens,
         },
       });
