@@ -32,11 +32,11 @@ async function testWikipediaImage(query: string) {
   }
 }
 
-async function run() {
+async function runTestWiki() {
   await testWikipediaImage("Spain women's national football team");
   await testWikipediaImage("Lionel Messi");
   await testWikipediaImage("Apple Inc");
   await testWikipediaImage("Cyclone Remal");
 }
 
-run();
+runTestWiki();
