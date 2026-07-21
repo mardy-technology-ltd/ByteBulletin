@@ -1,18 +1,20 @@
-import NextAuth from "next-auth";
-import { edgeAuthConfig } from "@/lib/auth/middleware-config";
 import { NextResponse } from "next/server";
-
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 // ─────────────────────────────────────────────────────────────
-// Middleware — Auth Guard + Route Protection
+// Middleware — Auth Guard + Route Protection (Edge Compatible)
 // ─────────────────────────────────────────────────────────────
 
-const { auth } = NextAuth(edgeAuthConfig);
-
-export default auth((req) => {
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ 
+    req, 
+    secret: process.env.AUTH_SECRET 
+  });
+  
   const { pathname } = req.nextUrl;
-  const isAuthenticated = !!req.auth?.user;
-  const isAdmin = req.auth?.user?.role === "ADMIN";
+  const isAuthenticated = !!token;
+  const isAdmin = token?.role === "ADMIN";
 
   // Admin route protection
   if (pathname.startsWith("/admin")) {
@@ -42,7 +44,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
@@ -51,7 +53,6 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico, public assets
-     * - api routes (handled separately)
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
