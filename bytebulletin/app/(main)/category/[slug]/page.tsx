@@ -53,7 +53,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
       <div className="flex flex-col mt-4">
         {remainingArticles.length > 0 ? (
-          remainingArticles.map(article => (
+          remainingArticles.map((article: any) => (
             <ArticleListItem 
               key={article.id}
               id={article.id}
