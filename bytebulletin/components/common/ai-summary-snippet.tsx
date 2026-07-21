@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { AudioPlayer } from "@/components/ui/audio-player";
 
 interface AISummarySnippetProps {
   summaryPoints: string[];
@@ -6,6 +7,9 @@ interface AISummarySnippetProps {
 
 export function AISummarySnippet({ summaryPoints }: AISummarySnippetProps) {
   if (!summaryPoints || summaryPoints.length === 0) return null;
+  
+  // Combine all points into a single string for the audio player
+  const textToRead = summaryPoints.join(". ");
 
   return (
     <div className="rounded-xl border bg-card/50 backdrop-blur-sm p-6 shadow-sm mb-8 relative overflow-hidden group">
@@ -14,12 +18,15 @@ export function AISummarySnippet({ summaryPoints }: AISummarySnippetProps) {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       <div className="relative z-10">
-        <h3 className="font-heading font-bold text-lg mb-4 flex items-center tracking-tight">
-          <Sparkles className="w-5 h-5 mr-2 text-indigo-500" />
-          <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-            AI Summary
-          </span>
-        </h3>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <h3 className="font-heading font-bold text-lg flex items-center tracking-tight">
+            <Sparkles className="w-5 h-5 mr-2 text-indigo-500" />
+            <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+              AI Summary
+            </span>
+          </h3>
+          <AudioPlayer text={textToRead} />
+        </div>
         
         <ul className="space-y-3">
           {summaryPoints.map((point, index) => (
