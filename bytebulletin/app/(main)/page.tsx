@@ -19,7 +19,7 @@ export default async function Home() {
   ]);
 
   // Format breaking news for the ticker
-  const tickerItems = breakingNews.map(item => ({
+  const tickerItems = breakingNews.map((item: any) => ({
     id: item.id,
     title: item.seo?.title || item.title,
     slug: item.slug
@@ -64,7 +64,7 @@ export default async function Home() {
               
               <div className="flex flex-col">
                 {filteredLatest.length > 0 ? (
-                  filteredLatest.map(article => (
+                  filteredLatest.map((article: any) => (
                     <ArticleListItem 
                       key={article.id}
                       id={article.id}
