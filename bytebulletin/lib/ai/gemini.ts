@@ -1,12 +1,12 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { generateObject } from "ai";
+import { createGroq } from "@ai-sdk/groq";
+import { generateText } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { AISentiment } from "@prisma/client";
 import { fetchWikipediaImage } from "@/lib/utils/wikipedia";
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+const groq = createGroq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 // The strict JSON Schema for the AI output
@@ -57,13 +57,35 @@ export async function processArticleWithAI(articleId: string) {
   `;
 
   try {
-    // 3. Call Google Gemini via AI SDK
-    const { object: enhancement, usage } = await generateObject({
-      model: google("gemini-flash-latest"),
-      schema: ArticleEnhancementSchema,
-      prompt: prompt,
-      temperature: 0.2, // Low temperature for consistent formatting
+    // 3. Call Groq via AI SDK using generateText
+    const { text, usage } = await generateText({
+      model: groq("llama-3.1-8b-instant"),
+      prompt: prompt + `\n\nIMPORTANT: Return ONLY a valid JSON object matching this exact structure:
+{
+  "summary": "A concise 2-3 sentence overview",
+  "keyPoints": ["point 1", "point 2", "point 3"],
+  "seoTitle": "A click-optimized title under 60 characters",
+  "metaDescription": "An SEO-optimized summary under 160 characters",
+  "ogDescription": "An engaging description for social media",
+  "tags": ["tag-1", "tag-2", "tag-3"],
+  "keywords": ["keyword 1", "keyword 2"],
+  "category": "Technology/Business/Science/Health",
+  "slug": "url-friendly-slug",
+  "sentiment": "POSITIVE" | "NEUTRAL" | "NEGATIVE",
+  "imageSearchKeyword": "Primary named entity (optional)"
+}
+Do not include markdown code blocks like \`\`\`json. Just the raw JSON object.`,
+      temperature: 0.1, 
+      maxRetries: 0,
     });
+
+    let enhancement: ArticleEnhancement;
+    try {
+      enhancement = JSON.parse(text.trim());
+    } catch (parseError) {
+      console.error("Failed to parse Groq response as JSON:", text);
+      throw new Error("Invalid JSON response from Groq.");
+    }
 
     // Fetch Wikipedia Image if no image exists
     let newImageUrl = article.imageUrl;
@@ -83,7 +105,7 @@ export async function processArticleWithAI(articleId: string) {
           summary: enhancement.summary,
           keyPoints: enhancement.keyPoints,
           sentiment: enhancement.sentiment as AISentiment,
-          model: "gemini-flash-latest",
+          model: "llama-3.1-8b-instant",
           tokensUsed: usage.totalTokens,
         },
       });
@@ -110,13 +132,15 @@ export async function processArticleWithAI(articleId: string) {
       await tx.article.update({
         where: { id: article.id },
         data: {
-          slug: `${enhancement.slug}-${article.id.slice(-6)}`, // Ensure uniqueness
           imageUrl: newImageUrl,
           tags: {
-            connectOrCreate: enhancement.tags.map(tag => ({
-              where: { name: tag },
-              create: { name: tag, slug: tag.toLowerCase().replace(/[^a-z0-9]+/g, '-') },
-            })),
+            connectOrCreate: enhancement.tags.map(tag => {
+              const slug = tag.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+              return {
+                where: { slug },
+                create: { name: tag, slug },
+              };
+            }),
           },
         },
       });

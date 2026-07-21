@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, FileText, Rss, Users } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 
+import { AiProcessingFlow } from "@/components/admin/ai-processing-flow";
+
 export default async function AdminDashboardPage() {
   // Fetch real metrics from DB
   const [totalArticles, totalUsers, activeSources] = await Promise.all([
@@ -41,14 +43,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-8">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>AI Processing Flow</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center border-t border-dashed bg-muted/20">
-            <p className="text-sm text-muted-foreground">Recharts traffic graph placeholder</p>
-          </CardContent>
-        </Card>
+        <AiProcessingFlow />
         
         <Card className="col-span-3">
           <CardHeader>

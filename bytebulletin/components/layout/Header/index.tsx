@@ -3,8 +3,9 @@ import { siteConfig } from "@/config/site";
 import { mainNav } from "@/config/nav";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/auth/config";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Search } from "lucide-react";
 import { logoutUser } from "@/actions/auth.actions";
 import { MobileNav } from "./mobile-nav";
 
@@ -35,6 +36,15 @@ export async function Header() {
         
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
+            <form action="/search" className="hidden lg:flex items-center relative mr-2">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                name="q"
+                type="search"
+                placeholder="Search articles..."
+                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[300px]"
+              />
+            </form>
             <div className="hidden md:flex items-center gap-2">
               {session?.user ? (
                 <div className="flex items-center gap-4">

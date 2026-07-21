@@ -19,17 +19,37 @@ async function main() {
     const article = unprocessedArticles[i];
     console.log(`[${i + 1}/${unprocessedArticles.length}] Processing article: ${article.title}`);
     
-    try {
-      await processArticleWithAI(article.id);
-      console.log(`✅ Success`);
-    } catch (error) {
-      console.error(`❌ Failed:`, error instanceof Error ? error.message : error);
+    let success = false;
+    let retries = 0;
+
+    while (!success && retries < 3) {
+      try {
+        await processArticleWithAI(article.id);
+        console.log(`✅ Success`);
+        success = true;
+      } catch (error: any) {
+        const errMsg = error.message || String(error);
+        if (
+          errMsg.includes("Quota exceeded") || 
+          errMsg.includes("429") || 
+          errMsg.includes("retry in") ||
+          errMsg.includes("Rate limit") ||
+          errMsg.includes("try again in")
+        ) {
+          retries++;
+          console.log(`⚠️ Rate limit hit (TPM/RPM). Pausing 60s before retry ${retries}/3...`);
+          await new Promise(resolve => setTimeout(resolve, 60000));
+        } else {
+          console.error(`❌ Failed:`, errMsg);
+          break; // Break on non-quota errors
+        }
+      }
     }
 
-    // Wait 4 seconds between requests to avoid Google Gemini Rate Limits (15 RPM for free tier)
+    // Wait 8 seconds between requests to avoid Google Gemini Rate Limits
     if (i < unprocessedArticles.length - 1) {
-      console.log('Waiting 4 seconds for rate limits...');
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      console.log('Waiting 8 seconds for rate limits...');
+      await new Promise(resolve => setTimeout(resolve, 8000));
     }
   }
 
