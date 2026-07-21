@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { LiveTicker } from "@/components/common/live-ticker";
 import { FeaturedHeroCard } from "@/components/ui/cards/featured-hero-card";
-import { ArticleCard } from "@/components/ui/cards/article-card";
+import { ArticleListItem } from "@/components/ui/cards/article-list-item";
 import { ListCard } from "@/components/ui/cards/list-card";
 import { ArticleRepository } from "@/repositories/article.repository";
+import { getArticleImage } from "@/lib/utils/image";
 
 // ISR: Revalidate the homepage every 60 seconds
 export const revalidate = 60;
@@ -46,25 +47,25 @@ export default async function Home() {
                 excerpt={featuredHero.excerpt || ""}
                 categoryName={featuredHero.category?.name || "General"}
                 publishedAt={featuredHero.publishedAt}
-                imageUrl={featuredHero.imageUrl}
+                imageUrl={getArticleImage(featuredHero.imageUrl, featuredHero.category?.slug, featuredHero.id)}
               />
             </section>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             {/* Main Feed */}
-            <div className="lg:col-span-8 space-y-8">
-              <div className="flex items-center justify-between border-b pb-4">
+            <div className="lg:col-span-8 space-y-6">
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
                 <h2 className="font-heading text-2xl font-bold tracking-tight">Latest Stories</h2>
                 <Link href="/latest" className="text-sm font-medium text-primary hover:underline">
                   View all
                 </Link>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="flex flex-col">
                 {filteredLatest.length > 0 ? (
                   filteredLatest.map(article => (
-                    <ArticleCard 
+                    <ArticleListItem 
                       key={article.id}
                       id={article.id}
                       title={article.title}
@@ -73,23 +74,23 @@ export default async function Home() {
                       sourceName={article.source.name}
                       publishedAt={article.publishedAt}
                       isAiSummarized={!!article.aiSummary}
-                      imageUrl={article.imageUrl}
+                      imageUrl={getArticleImage(article.imageUrl, article.category?.slug, article.id)}
                     />
                   ))
                 ) : (
-                  <p className="text-muted-foreground text-sm col-span-2">No articles available.</p>
+                  <p className="text-muted-foreground text-sm py-8 text-center">No articles available.</p>
                 )}
               </div>
             </div>
 
             {/* Sidebar */}
             <div className="lg:col-span-4 space-y-8">
-              <div className="rounded-xl border bg-card p-6">
-                <h3 className="font-heading text-lg font-bold mb-4 flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-primary mr-2" />
+              <div className="rounded-2xl border border-border/50 bg-card/50 p-6 shadow-sm">
+                <h3 className="font-heading text-xl font-bold mb-6 flex items-center tracking-tight">
+                  <span className="w-2.5 h-2.5 rounded-full bg-primary mr-3 animate-pulse" />
                   Trending Now
                 </h3>
-                <div className="flex flex-col">
+                <div className="flex flex-col space-y-1">
                   {trendingArticles.length > 0 ? (
                     trendingArticles.map((article, index) => (
                       <ListCard 

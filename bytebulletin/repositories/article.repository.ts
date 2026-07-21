@@ -32,6 +32,7 @@ export class ArticleRepository {
       orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
+        category: { select: { slug: true } },
         aiSummary: { select: { id: true } },
       },
     });
@@ -87,6 +88,7 @@ export class ArticleRepository {
       orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
+        category: { select: { slug: true } },
         aiSummary: { select: { id: true } },
       },
     });

@@ -1,7 +1,9 @@
 import { ArticleRepository } from "@/repositories/article.repository";
-import { ArticleCard } from "@/components/ui/cards/article-card";
+import { FeaturedArticle } from "@/components/ui/cards/featured-article";
+import { ArticleListItem } from "@/components/ui/cards/article-list-item";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { getArticleImage } from "@/lib/utils/image";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -22,21 +24,37 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   // Use repository to fetch real data
   const articles = await ArticleRepository.getByCategory(slug);
 
+  const featuredArticle = articles.length > 0 ? articles[0] : null;
+  const remainingArticles = articles.length > 1 ? articles.slice(1) : [];
+
   return (
-    <div className="max-w-7xl mx-auto py-10 px-4 md:px-8">
-      <div className="border-b pb-6 mb-8">
-        <h1 className="font-heading text-4xl font-bold tracking-tight capitalize">
+    <div className="max-w-5xl mx-auto py-10 px-4 md:px-8">
+      <div className="border-b border-border/50 pb-6 mb-8">
+        <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight capitalize">
           {slug.replace("-", " ")} News
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-lg text-muted-foreground mt-3">
           The latest and most important stories in {slug.replace("-", " ")}.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {articles.length > 0 ? (
-          articles.map(article => (
-            <ArticleCard 
+      {featuredArticle && (
+        <FeaturedArticle 
+          id={featuredArticle.id}
+          title={featuredArticle.title}
+          slug={featuredArticle.slug}
+          excerpt={featuredArticle.excerpt}
+          sourceName={featuredArticle.source.name}
+          publishedAt={featuredArticle.publishedAt}
+          isAiSummarized={!!featuredArticle.aiSummary}
+          imageUrl={getArticleImage(featuredHeroImageUrl(featuredArticle), slug, featuredArticle.id)}
+        />
+      )}
+
+      <div className="flex flex-col mt-4">
+        {remainingArticles.length > 0 ? (
+          remainingArticles.map(article => (
+            <ArticleListItem 
               key={article.id}
               id={article.id}
               title={article.title}
@@ -45,16 +63,22 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               sourceName={article.source.name}
               publishedAt={article.publishedAt}
               isAiSummarized={!!article.aiSummary}
-              imageUrl={article.imageUrl}
+              imageUrl={getArticleImage(article.imageUrl, slug, article.id)}
             />
           ))
         ) : (
-          <div className="col-span-full py-12 text-center border rounded-xl bg-muted/20">
-            <h3 className="text-lg font-semibold">No articles found</h3>
-            <p className="text-muted-foreground">We couldn't find any recent articles in this category.</p>
-          </div>
+          !featuredArticle && (
+            <div className="py-16 text-center border border-border/50 rounded-2xl bg-muted/10">
+              <h3 className="text-xl font-bold tracking-tight mb-2">No articles found</h3>
+              <p className="text-muted-foreground">We couldn't find any recent articles in this category.</p>
+            </div>
+          )
         )}
       </div>
     </div>
   );
+}
+
+function featuredHeroImageUrl(article: any) {
+  return article.imageUrl;
 }

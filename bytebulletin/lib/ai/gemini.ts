@@ -3,6 +3,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { AISentiment } from "@prisma/client";
+import { fetchWikipediaImage } from "@/lib/utils/wikipedia";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
@@ -20,6 +21,7 @@ const ArticleEnhancementSchema = z.object({
   category: z.string().describe("The most relevant site category for this article (e.g., Technology, Business, Science, Health)."),
   slug: z.string().describe("A clean, URL-friendly slug based on the seoTitle."),
   sentiment: z.enum(["POSITIVE", "NEUTRAL", "NEGATIVE"]).describe("The overall sentiment of the article."),
+  imageSearchKeyword: z.string().optional().describe("The primary named entity (person, team, company, event) in this article to be used for a Wikipedia image search."),
 });
 
 type ArticleEnhancement = z.infer<typeof ArticleEnhancementSchema>;
@@ -63,6 +65,15 @@ export async function processArticleWithAI(articleId: string) {
       temperature: 0.2, // Low temperature for consistent formatting
     });
 
+    // Fetch Wikipedia Image if no image exists
+    let newImageUrl = article.imageUrl;
+    if (!newImageUrl && enhancement.imageSearchKeyword) {
+      const wikiImage = await fetchWikipediaImage(enhancement.imageSearchKeyword);
+      if (wikiImage) {
+        newImageUrl = wikiImage;
+      }
+    }
+
     // 4. Update the Database with the AI results
     await prisma.$transaction(async (tx) => {
       // Create AI Summary
@@ -83,24 +94,24 @@ export async function processArticleWithAI(articleId: string) {
         update: {
           title: enhancement.seoTitle,
           description: enhancement.metaDescription,
-          ogImage: article.imageUrl,
+          ogImage: newImageUrl,
           keywords: enhancement.keywords,
         },
         create: {
           articleId: article.id,
           title: enhancement.seoTitle,
           description: enhancement.metaDescription,
-          ogImage: article.imageUrl,
+          ogImage: newImageUrl,
           keywords: enhancement.keywords,
         },
       });
 
-      // Update Article tags, slug, and category (if applicable)
-      // Note: In a real app, you might want to map the AI's category string to an actual Category ID
+      // Update Article tags, slug, category, and possibly imageUrl
       await tx.article.update({
         where: { id: article.id },
         data: {
           slug: `${enhancement.slug}-${article.id.slice(-6)}`, // Ensure uniqueness
+          imageUrl: newImageUrl,
           tags: {
             connectOrCreate: enhancement.tags.map(tag => ({
               where: { name: tag },
