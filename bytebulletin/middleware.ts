@@ -3,16 +3,33 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 // ─────────────────────────────────────────────────────────────
-// Middleware — Auth Guard + Route Protection (Edge Compatible)
+// Middleware — Auth Guard + Route Protection (Fault-Tolerant Edge)
 // ─────────────────────────────────────────────────────────────
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ 
-    req, 
-    secret: process.env.AUTH_SECRET 
-  });
-  
   const { pathname } = req.nextUrl;
+  let token = null;
+
+  try {
+    const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+    if (secret) {
+      token = await getToken({ 
+        req, 
+        secret,
+        // Support both NextAuth v4 and Auth.js v5 cookie names
+        cookieName: req.cookies.has("__Secure-authjs.session-token")
+          ? "__Secure-authjs.session-token"
+          : req.cookies.has("authjs.session-token")
+          ? "authjs.session-token"
+          : req.cookies.has("__Secure-next-auth.session-token")
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      });
+    }
+  } catch (error) {
+    console.error("[Middleware Error]:", error);
+  }
+  
   const isAuthenticated = !!token;
   const isAdmin = token?.role === "ADMIN";
 
