@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 
 import { AiProcessingFlow } from "@/components/admin/ai-processing-flow";
 import { RecentAiSummaries } from "@/components/admin/recent-ai-summaries";
+import { RssFetchMonitor } from "@/components/admin/rss-fetch-monitor";
 
 export default async function AdminDashboardPage() {
   // Fetch real metrics & recent AI summaries from DB
@@ -56,7 +57,13 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-8">
+      {/* 1. RSS News Fetch Monitor at TOP */}
+      <div className="mt-8">
+        <RssFetchMonitor />
+      </div>
+
+      {/* 2. AI Summary Processing & Cron Monitor + Recent AI Summaries below */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-6">
         <AiProcessingFlow />
         <RecentAiSummaries initialSummaries={initialSummaries} />
       </div>

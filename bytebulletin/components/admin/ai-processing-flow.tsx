@@ -152,7 +152,7 @@ export function AiProcessingFlow() {
       <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-slate-950/80 backdrop-blur pb-3 pt-4">
         <div className="flex flex-col gap-1">
           <CardTitle className="text-sm font-mono text-slate-100 flex items-center gap-2">
-            <span>AI Processing & Cron Monitor</span>
+            <span>AI Summary Processing & Cron Monitor</span>
             <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-sans font-normal ml-2 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded-full">
               <Radio className="h-3 w-3 animate-pulse text-emerald-400" /> Live Sync
             </span>
