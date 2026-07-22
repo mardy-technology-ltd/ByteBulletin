@@ -21,7 +21,10 @@ export function RssFetchMonitor({ initialLogs }: { initialLogs?: RssLogItem[] })
   useEffect(() => {
     const fetchRssActivity = async () => {
       try {
-        const res = await fetch("/api/admin/rss/activity");
+        const res = await fetch(`/api/admin/rss/activity?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
         if (!res.ok) return;
         const json = await res.json();
         if (json.success && Array.isArray(json.logs)) {

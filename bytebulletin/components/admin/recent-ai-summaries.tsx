@@ -18,7 +18,10 @@ export function RecentAiSummaries({ initialSummaries }: { initialSummaries: AISu
   useEffect(() => {
     const fetchRecent = async () => {
       try {
-        const res = await fetch("/api/admin/ai/activity");
+        const res = await fetch(`/api/admin/ai/activity?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
         if (!res.ok) return;
         const json = await res.json();
         if (json.success && Array.isArray(json.summaries)) {
@@ -29,7 +32,8 @@ export function RecentAiSummaries({ initialSummaries }: { initialSummaries: AISu
       }
     };
 
-    const interval = setInterval(fetchRecent, 4000);
+    fetchRecent();
+    const interval = setInterval(fetchRecent, 2500);
     return () => clearInterval(interval);
   }, []);
 
