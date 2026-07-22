@@ -39,6 +39,37 @@ export class ArticleRepository {
   }
 
   /**
+   * Fetches paginated latest articles for infinite scroll.
+   */
+  static async getPaginatedLatest(page = 1, limit = 6, excludeId?: string) {
+    const skip = (page - 1) * limit;
+    
+    const articles = await prisma.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      skip,
+      take: limit + 1, // Fetch 1 extra to check if there are more
+      orderBy: { publishedAt: "desc" },
+      include: {
+        source: { select: { name: true } },
+        category: { select: { slug: true } },
+        aiSummary: { select: { id: true } },
+      },
+    });
+
+    const hasMore = articles.length > limit;
+    const items = hasMore ? articles.slice(0, limit) : articles;
+
+    return {
+      articles: items,
+      hasMore,
+      nextPage: hasMore ? page + 1 : null,
+    };
+  }
+
+  /**
    * Fetches "Trending" articles (currently simulated by fetching articles with AI Summaries)
    */
   static async getTrending(limit = 5) {

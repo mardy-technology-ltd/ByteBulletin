@@ -5,6 +5,8 @@ import { ArticleListItem } from "@/components/ui/cards/article-list-item";
 import { ListCard } from "@/components/ui/cards/list-card";
 import { ArticleRepository } from "@/repositories/article.repository";
 import { getArticleImage } from "@/lib/utils/image";
+import { InfiniteArticleFeed } from "@/components/common/infinite-article-feed";
+import { FeedArticleItem } from "@/actions/article.actions";
 
 // ISR: Revalidate the homepage every 60 seconds
 export const revalidate = 60;
@@ -29,6 +31,18 @@ export default async function Home() {
   const filteredLatest = featuredHero 
     ? latestArticles.filter((a: any) => a.id !== featuredHero.id) 
     : latestArticles;
+
+  // Format initial SSR batch of articles for the feed
+  const initialFormattedArticles: FeedArticleItem[] = filteredLatest.map((article: any) => ({
+    id: article.id,
+    title: article.title,
+    slug: article.slug,
+    excerpt: article.excerpt,
+    imageUrl: getArticleImage(article.imageUrl, article.category?.slug, article.id),
+    sourceName: article.source.name,
+    publishedAt: article.publishedAt.toISOString(),
+    isAiSummarized: !!article.aiSummary,
+  }));
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -62,25 +76,35 @@ export default async function Home() {
                 </Link>
               </div>
               
-              <div className="flex flex-col">
-                {filteredLatest.length > 0 ? (
-                  filteredLatest.map((article: any) => (
-                    <ArticleListItem 
-                      key={article.id}
-                      id={article.id}
-                      title={article.title}
-                      slug={article.slug}
-                      excerpt={article.excerpt}
-                      sourceName={article.source.name}
-                      publishedAt={article.publishedAt}
-                      isAiSummarized={!!article.aiSummary}
-                      imageUrl={getArticleImage(article.imageUrl, article.category?.slug, article.id)}
-                    />
-                  ))
-                ) : (
-                  <p className="text-muted-foreground text-sm py-8 text-center">No articles available.</p>
-                )}
-              </div>
+              {initialFormattedArticles.length > 0 ? (
+                <>
+                  <InfiniteArticleFeed 
+                    initialArticles={initialFormattedArticles} 
+                    excludeHeroId={featuredHero?.id} 
+                  />
+                  
+                  {/* Fallback for non-JS web crawlers */}
+                  <noscript>
+                    <div className="flex flex-col">
+                      {initialFormattedArticles.map((article) => (
+                        <ArticleListItem 
+                          key={article.id}
+                          id={article.id}
+                          title={article.title}
+                          slug={article.slug}
+                          excerpt={article.excerpt}
+                          sourceName={article.sourceName}
+                          publishedAt={new Date(article.publishedAt)}
+                          isAiSummarized={article.isAiSummarized}
+                          imageUrl={article.imageUrl}
+                        />
+                      ))}
+                    </div>
+                  </noscript>
+                </>
+              ) : (
+                <p className="text-muted-foreground text-sm py-8 text-center">No articles available.</p>
+              )}
             </div>
 
             {/* Sidebar */}
