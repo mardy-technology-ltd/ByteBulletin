@@ -74,6 +74,14 @@ enum MediaType {
   DOCUMENT
 }
 
+enum ReactionType {
+  LIKE
+  LOVE
+  LAUGH
+  THINKING
+  FIRE
+}
+
 // ─────────────────────────────────────────────
 // AUTH ENTITIES (Auth.js v5 compatible)
 // ─────────────────────────────────────────────
@@ -93,6 +101,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   bookmarks     Bookmark[]
+  reactions     ArticleReaction[]
+  comments      Comment[]
   preferences   UserPreference?
 
   @@map("users")
@@ -220,6 +230,8 @@ model Article {
   aiSummary   AISummary?
   seo         SeoMetadata?
   bookmarks   Bookmark[]
+  reactions   ArticleReaction[]
+  comments    Comment[]
   media       MediaAsset[]
   analytics   AnalyticsEvent[]
 
@@ -261,6 +273,38 @@ model Bookmark {
   @@unique([userId, articleId]) // Prevent duplicate bookmarks
   @@index([userId, createdAt(sort: Desc)])
   @@map("bookmarks")
+}
+
+model ArticleReaction {
+  id        String       @id @default(cuid())
+  userId    String
+  articleId String
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([articleId])
+  @@map("article_reactions")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  articleId String
+  userId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt(sort: Desc)])
+  @@map("comments")
 }
 
 model UserPreference {

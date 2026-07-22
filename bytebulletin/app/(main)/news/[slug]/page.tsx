@@ -6,6 +6,10 @@ import { ArticleRepository } from "@/repositories/article.repository";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { BookmarkRepository } from "@/repositories/bookmark.repository";
+import { getArticleReactionsData } from "@/actions/engagement.actions";
+import { ArticleReactions } from "@/components/article/article-reactions";
+import { CommentSection } from "@/components/article/comment-section";
+import { prisma } from "@/lib/db/prisma";
 import Image from "next/image";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -64,6 +68,27 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
   let initialIsBookmarked = false;
   if (session?.user?.id) {
     initialIsBookmarked = await BookmarkRepository.isBookmarked(session.user.id, article.id);
+  }
+
+  // Fetch reactions and comments
+  const { counts: reactionCounts, userReaction } = await getArticleReactionsData(article.id, session?.user?.id);
+
+  let comments: any[] = [];
+  try {
+    const commentModel = (prisma as any)?.comment;
+    if (commentModel && typeof commentModel.findMany === "function") {
+      comments = await commentModel.findMany({
+        where: { articleId: article.id },
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: {
+            select: { id: true, name: true, image: true },
+          },
+        },
+      });
+    }
+  } catch (err) {
+    console.error("Comments fetch error:", err);
   }
 
   // JSON-LD Structured Data for Google News
@@ -136,6 +161,21 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
           articleId={article.id}
           isAuthenticated={isAuthenticated}
           initialIsBookmarked={initialIsBookmarked}
+        />
+
+        {/* Emoji Reactions Bar */}
+        <ArticleReactions
+          articleId={article.id}
+          initialCounts={reactionCounts}
+          initialUserReaction={userReaction}
+          isLoggedIn={isAuthenticated}
+        />
+
+        {/* Comments Section */}
+        <CommentSection
+          articleId={article.id}
+          initialComments={comments}
+          currentUser={session?.user}
         />
       </article>
     </>
