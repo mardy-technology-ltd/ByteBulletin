@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { LiveTicker } from "@/components/common/live-ticker";
-import { FeaturedHeroCard } from "@/components/ui/cards/featured-hero-card";
+import { SynchronizedHeroSection } from "@/components/common/synchronized-hero-section";
+import { FeaturedHeroItem } from "@/components/ui/cards/featured-hero-slider";
 import { ArticleListItem } from "@/components/ui/cards/article-list-item";
 import { ListCard } from "@/components/ui/cards/list-card";
 import { ArticleRepository } from "@/repositories/article.repository";
@@ -12,20 +12,33 @@ import { FeedArticleItem } from "@/actions/article.actions";
 export const revalidate = 60;
 
 export default async function Home() {
-  const featuredHero = await ArticleRepository.getFeaturedHero();
+  const featuredHeroes = await ArticleRepository.getFeaturedHeroes(5);
+  const primaryHeroId = featuredHeroes[0]?.id;
 
   // Fetch all required data in parallel for performance
   const [latestResult, trendingArticles, breakingNews] = await Promise.all([
-    ArticleRepository.getPaginatedLatest(1, 6, featuredHero?.id),
+    ArticleRepository.getPaginatedLatest(1, 6, primaryHeroId),
     ArticleRepository.getTrending(5),
-    ArticleRepository.getBreakingNews(3),
+    ArticleRepository.getBreakingNews(6),
   ]);
 
-  // Format breaking news for the ticker
-  const tickerItems = breakingNews.map((item: any) => ({
+  // Format breaking news for the ticker directly from featured stories
+  const tickerItems = featuredHeroes.map((item: any) => ({
     id: item.id,
     title: item.seo?.title || item.title,
-    slug: item.slug
+    slug: item.slug,
+    categoryName: item.category?.name || "News",
+  }));
+
+  // Format featured hero items for slider
+  const formattedFeaturedHeroes: FeaturedHeroItem[] = featuredHeroes.map((hero: any) => ({
+    id: hero.id,
+    title: hero.seo?.title || hero.title,
+    slug: hero.slug,
+    excerpt: hero.excerpt || "",
+    categoryName: hero.category?.name || "General",
+    publishedAt: hero.publishedAt,
+    imageUrl: getArticleImage(hero.imageUrl, hero.category?.slug, hero.id),
   }));
 
   // Format initial SSR batch of articles for the feed
@@ -42,26 +55,14 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {tickerItems.length > 0 && <LiveTicker items={tickerItems} />}
-      
+      {/* Synchronized Hero Section (Breaking News Ticker + Featured Slider Master Controller) */}
+      <SynchronizedHeroSection
+        tickerItems={tickerItems}
+        heroItems={formattedFeaturedHeroes}
+      />
+
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-12">
-          
-          {/* Hero Section */}
-          {featuredHero && (
-            <section>
-              <FeaturedHeroCard 
-                id={featuredHero.id}
-                title={featuredHero.seo?.title || featuredHero.title}
-                slug={featuredHero.slug}
-                excerpt={featuredHero.excerpt || ""}
-                categoryName={featuredHero.category?.name || "General"}
-                publishedAt={featuredHero.publishedAt}
-                imageUrl={getArticleImage(featuredHero.imageUrl, featuredHero.category?.slug, featuredHero.id)}
-              />
-            </section>
-          )}
-
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             {/* Main Feed */}
             <div className="lg:col-span-8 space-y-6">
@@ -77,7 +78,7 @@ export default async function Home() {
                   <InfiniteArticleFeed 
                     initialArticles={initialFormattedArticles}
                     initialHasMore={latestResult.hasMore}
-                    excludeHeroId={featuredHero?.id} 
+                    excludeHeroId={primaryHeroId} 
                   />
                   
                   {/* Fallback for non-JS web crawlers */}
@@ -90,46 +91,43 @@ export default async function Home() {
                           title={article.title}
                           slug={article.slug}
                           excerpt={article.excerpt}
+                          imageUrl={article.imageUrl}
                           sourceName={article.sourceName}
                           publishedAt={new Date(article.publishedAt)}
                           isAiSummarized={article.isAiSummarized}
-                          imageUrl={article.imageUrl}
                         />
                       ))}
                     </div>
                   </noscript>
                 </>
               ) : (
-                <p className="text-muted-foreground text-sm py-8 text-center">No articles available.</p>
+                <p className="text-muted-foreground py-8 text-center">No articles available.</p>
               )}
             </div>
 
             {/* Sidebar */}
-            <div className="lg:col-span-4 space-y-8">
-              <div className="rounded-2xl border border-border/50 bg-card/50 p-6 shadow-sm">
-                <h3 className="font-heading text-xl font-bold mb-6 flex items-center tracking-tight">
-                  <span className="w-2.5 h-2.5 rounded-full bg-primary mr-3 animate-pulse" />
-                  Trending Now
+            <aside className="lg:col-span-4 space-y-8">
+              {/* Trending Section */}
+              <div className="rounded-2xl border border-border/40 bg-card/40 p-6 space-y-4 shadow-sm backdrop-blur-xs">
+                <h3 className="font-heading text-lg font-bold tracking-tight border-b border-border/40 pb-3 flex items-center justify-between">
+                  <span>Trending Topics</span>
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 </h3>
-                <div className="flex flex-col space-y-1">
-                  {trendingArticles.length > 0 ? (
-                    trendingArticles.map((article, index) => (
-                      <ListCard 
-                        key={article.id}
-                        id={article.id}
-                        title={article.title}
-                        slug={article.slug}
-                        sourceName={article.source.name}
-                        publishedAt={article.publishedAt}
-                        index={index}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-sm">No trending articles.</p>
-                  )}
+                <div className="space-y-1 divide-y divide-border/30">
+                  {trendingArticles.map((article: any, index: number) => (
+                    <ListCard 
+                      key={article.id}
+                      id={article.id}
+                      title={article.title}
+                      slug={article.slug}
+                      sourceName={article.source.name}
+                      publishedAt={article.publishedAt}
+                      index={index}
+                    />
+                  ))}
                 </div>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
       </main>

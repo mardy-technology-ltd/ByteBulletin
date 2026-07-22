@@ -31,7 +31,7 @@ export function ListCard({
         <div className="flex items-center text-xs text-muted-foreground space-x-2">
           <span className="font-medium">{sourceName}</span>
           <span>•</span>
-          <time dateTime={publishedAt.toISOString()}>
+          <time dateTime={publishedAt.toISOString()} suppressHydrationWarning>
             {timeAgo(publishedAt)}
           </time>
         </div>

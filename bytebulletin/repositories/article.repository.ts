@@ -20,6 +20,25 @@ export class ArticleRepository {
   }
 
   /**
+   * Fetches multiple prominent articles to feature in the homepage carousel slider.
+   */
+  static async getFeaturedHeroes(limit = 5) {
+    return prisma.article.findMany({
+      where: { 
+        status: "PUBLISHED",
+        imageUrl: { not: null },
+      },
+      take: limit,
+      orderBy: { publishedAt: "desc" },
+      include: {
+        source: { select: { name: true } },
+        category: { select: { name: true, slug: true } },
+        seo: { select: { title: true } }
+      },
+    });
+  }
+
+  /**
    * Fetches the latest published articles.
    */
   static async getLatest(limit = 6, excludeId?: string) {
@@ -89,7 +108,7 @@ export class ArticleRepository {
   /**
    * Fetches breaking news for the live ticker.
    */
-  static async getBreakingNews(limit = 3) {
+  static async getBreakingNews(limit = 6) {
     return prisma.article.findMany({
       where: { status: "PUBLISHED" },
       take: limit,
@@ -98,8 +117,11 @@ export class ArticleRepository {
         id: true,
         title: true,
         slug: true,
-        seo: { select: { title: true } }
-      }
+        category: {
+          select: { name: true, slug: true },
+        },
+        seo: { select: { title: true } },
+      },
     });
   }
 

@@ -60,7 +60,7 @@ export function ArticleListItem({
         )}
         
         <div className="mt-auto flex items-center text-xs text-muted-foreground/80 font-medium">
-          <time dateTime={publishedAt.toISOString()}>
+          <time dateTime={publishedAt.toISOString()} suppressHydrationWarning>
             {timeAgo(publishedAt)}
           </time>
         </div>

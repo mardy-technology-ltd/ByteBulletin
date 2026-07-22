@@ -43,7 +43,7 @@ export function FeaturedHeroCard({
           <span className="inline-flex items-center rounded-full bg-violet-500/20 px-3.5 py-1 text-xs font-semibold text-violet-200 backdrop-blur-md border border-violet-400/30 uppercase tracking-widest shadow-xs">
             {categoryName}
           </span>
-          <span className="text-xs font-medium text-gray-300">
+          <span className="text-xs font-medium text-gray-300" suppressHydrationWarning>
             {timeAgo(publishedAt)}
           </span>
         </div>

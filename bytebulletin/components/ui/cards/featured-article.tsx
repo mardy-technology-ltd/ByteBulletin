@@ -58,7 +58,7 @@ export function FeaturedArticle({
             </p>
           )}
           <div className="mt-auto flex items-center text-sm text-muted-foreground font-medium">
-            <time dateTime={publishedAt.toISOString()}>
+            <time dateTime={publishedAt.toISOString()} suppressHydrationWarning>
               {timeAgo(publishedAt)}
             </time>
           </div>

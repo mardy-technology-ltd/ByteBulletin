@@ -55,7 +55,7 @@ export function ArticleCard({
           </p>
         )}
         <div className="mt-auto pt-4 flex items-center text-xs text-muted-foreground">
-          <time dateTime={publishedAt.toISOString()}>
+          <time dateTime={publishedAt.toISOString()} suppressHydrationWarning>
             {timeAgo(publishedAt)}
           </time>
         </div>
