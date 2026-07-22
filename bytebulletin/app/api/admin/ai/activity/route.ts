@@ -1,26 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth/config";
-import { getCronLogs } from "@/lib/ai/cron-logs";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await auth();
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const since = parseInt(searchParams.get("since") || "0", 10);
-
-    // Fetch cron logs generated after `since` timestamp
-    const cronLogs = getCronLogs(since);
-
-    // Fetch recent DB summaries as fallback
-    const recentSummaries = await prisma.aISummary.findMany({
-      take: 5,
+    // Fetch the 15 most recently processed AI Summaries directly from DB
+    const summaries = await prisma.aISummary.findMany({
+      take: 15,
       orderBy: {
         createdAt: "desc",
       },
@@ -29,17 +22,37 @@ export async function GET(request: Request) {
           select: {
             id: true,
             title: true,
+            publishedAt: true,
             category: { select: { name: true } },
           },
         },
       },
     });
 
+    // Also get total article stats
+    const totalArticles = await prisma.article.count();
+    const summarizedArticles = await prisma.article.count({
+      where: { aiSummary: { isNot: null } },
+    });
+
+    const logs = summaries.map((s, idx) => ({
+      id: s.id,
+      timestamp: new Date(s.createdAt).getTime(),
+      formattedTime: new Date(s.createdAt).toLocaleTimeString(),
+      title: s.article?.title || s.articleId,
+      category: s.article?.category?.name || "General",
+      model: s.model,
+      summaryPreview: s.summary ? s.summary.substring(0, 100) + "..." : "",
+    }));
+
     return NextResponse.json({
       success: true,
-      logs: cronLogs,
-      summaries: recentSummaries,
-      timestamp: Date.now(),
+      stats: {
+        totalArticles,
+        summarizedArticles,
+        unsummarizedArticles: totalArticles - summarizedArticles,
+      },
+      summaries: logs,
     });
   } catch (error) {
     console.error("[AI Activity Endpoint Error]:", error);

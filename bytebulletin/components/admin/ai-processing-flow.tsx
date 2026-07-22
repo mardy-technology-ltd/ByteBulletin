@@ -22,7 +22,6 @@ export function AiProcessingFlow() {
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
-  const lastTimestampRef = useRef<number>(0);
   const seenSummaryIdsRef = useRef<Set<string>>(new Set());
 
   // Auto-scroll to bottom
@@ -32,46 +31,37 @@ export function AiProcessingFlow() {
     }
   }, [logs]);
 
-  // Poll for background Cron Job AI completions every 3 seconds
+  // Poll DB for background Cron Job executions every 4 seconds
   useEffect(() => {
-    const fetchRecentActivity = async () => {
+    const fetchDbCronActivity = async () => {
       try {
-        const res = await fetch(`/api/admin/ai/activity?since=${lastTimestampRef.current}`);
+        const res = await fetch("/api/admin/ai/activity");
         if (!res.ok) return;
         const json = await res.json();
-        if (!json.success) return;
-
-        if (json.timestamp) {
-          lastTimestampRef.current = json.timestamp;
-        }
+        if (!json.success || !Array.isArray(json.summaries)) return;
 
         const newLogs: LogEntry[] = [];
+        const isFirstLoad = seenSummaryIdsRef.current.size === 0;
 
-        // 1. Process rich cron logs from server buffer
-        if (Array.isArray(json.logs)) {
-          for (const item of json.logs) {
+        // Process summaries in chronological order (oldest to newest)
+        const orderedSummaries = [...json.summaries].reverse();
+
+        for (const item of orderedSummaries) {
+          if (!seenSummaryIdsRef.current.has(item.id)) {
+            seenSummaryIdsRef.current.add(item.id);
+
+            // Create step-by-step logs for each processed article
+            const totalCount = json.stats?.summarizedArticles || 0;
             newLogs.push({
-              id: item.id || Math.random().toString(36).substring(2, 9),
-              type: item.type || "info",
-              message: item.message,
+              id: `${item.id}-proc`,
+              type: "process",
+              message: `[${item.formattedTime}] 🚀 Processing article: ${item.title}`,
             });
-          }
-        }
-
-        // 2. Process DB summaries fallback
-        if (Array.isArray(json.summaries)) {
-          for (const item of json.summaries) {
-            if (!seenSummaryIdsRef.current.has(item.id)) {
-              seenSummaryIdsRef.current.add(item.id);
-              if (seenSummaryIdsRef.current.size > json.summaries.length) {
-                const articleTitle = item.article?.title || item.articleId;
-                newLogs.push({
-                  id: item.id,
-                  type: "success",
-                  message: `[CRON LIVE SYNC] ✅ Success: Generated summary for "${articleTitle}"`,
-                });
-              }
-            }
+            newLogs.push({
+              id: `${item.id}-succ`,
+              type: "success",
+              message: `[${item.formattedTime}] ✅ Success (${item.category} | ${item.model})`,
+            });
           }
         }
 
@@ -83,8 +73,8 @@ export function AiProcessingFlow() {
       }
     };
 
-    fetchRecentActivity();
-    const interval = setInterval(fetchRecentActivity, 3000);
+    fetchDbCronActivity();
+    const interval = setInterval(fetchDbCronActivity, 4000);
     return () => clearInterval(interval);
   }, []);
 
