@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { auth } from "@/lib/auth/config";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     // Fetch the 15 most recently processed AI Summaries directly from DB
     const summaries = await prisma.aISummary.findMany({
       take: 15,
@@ -29,13 +23,13 @@ export async function GET() {
       },
     });
 
-    // Also get total article stats
+    // Get total article stats
     const totalArticles = await prisma.article.count();
     const summarizedArticles = await prisma.article.count({
       where: { aiSummary: { isNot: null } },
     });
 
-    const logs = summaries.map((s, idx) => ({
+    const logs = summaries.map((s) => ({
       id: s.id,
       timestamp: new Date(s.createdAt).getTime(),
       formattedTime: new Date(s.createdAt).toLocaleTimeString(),

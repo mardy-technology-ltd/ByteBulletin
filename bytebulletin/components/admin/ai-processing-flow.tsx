@@ -31,17 +31,19 @@ export function AiProcessingFlow() {
     }
   }, [logs]);
 
-  // Poll DB for background Cron Job executions every 4 seconds
+  // Poll DB for background Cron Job executions every 3 seconds
   useEffect(() => {
     const fetchDbCronActivity = async () => {
       try {
         const res = await fetch("/api/admin/ai/activity");
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.error("AI Activity fetch failed with status:", res.status);
+          return;
+        }
         const json = await res.json();
         if (!json.success || !Array.isArray(json.summaries)) return;
 
         const newLogs: LogEntry[] = [];
-        const isFirstLoad = seenSummaryIdsRef.current.size === 0;
 
         // Process summaries in chronological order (oldest to newest)
         const orderedSummaries = [...json.summaries].reverse();
@@ -51,7 +53,6 @@ export function AiProcessingFlow() {
             seenSummaryIdsRef.current.add(item.id);
 
             // Create step-by-step logs for each processed article
-            const totalCount = json.stats?.summarizedArticles || 0;
             newLogs.push({
               id: `${item.id}-proc`,
               type: "process",
@@ -69,12 +70,12 @@ export function AiProcessingFlow() {
           setLogs((prev) => [...prev, ...newLogs]);
         }
       } catch (err) {
-        // Silent catch for background poll
+        console.error("Error in fetchDbCronActivity:", err);
       }
     };
 
     fetchDbCronActivity();
-    const interval = setInterval(fetchDbCronActivity, 4000);
+    const interval = setInterval(fetchDbCronActivity, 3000);
     return () => clearInterval(interval);
   }, []);
 
