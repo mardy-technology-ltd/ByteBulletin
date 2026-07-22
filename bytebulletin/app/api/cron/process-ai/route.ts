@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { processArticleWithAI } from "@/lib/ai/process-article";
+import { processArticleWithAI } from "@/lib/ai/gemini";
 import { addCronLog } from "@/lib/ai/cron-logs";
 
 export const maxDuration = 60; // 60 seconds max duration on Vercel
