@@ -27,8 +27,12 @@ export function LoginForm() {
       if (res?.error) {
         setError(res.error);
       } else {
+      if (res?.role === "ADMIN") {
+        router.push("/admin");
+      } else {
         router.push("/");
-        router.refresh();
+      }
+      router.refresh();
       }
     } catch (err) {
       setError("Something went wrong");

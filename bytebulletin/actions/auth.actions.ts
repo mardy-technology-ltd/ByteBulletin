@@ -22,7 +22,12 @@ export async function loginUser(data: LoginInput) {
       redirect: false,
     });
 
-    return { success: true };
+    const user = await prisma.user.findUnique({
+      where: { email: parsed.data.email },
+      select: { role: true }
+    });
+
+    return { success: true, role: user?.role || "USER" };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
