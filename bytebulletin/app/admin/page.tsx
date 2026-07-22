@@ -3,19 +3,28 @@ import { Activity, FileText, Rss, Users } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 
 import { AiProcessingFlow } from "@/components/admin/ai-processing-flow";
+import { RecentAiSummaries } from "@/components/admin/recent-ai-summaries";
 
 export default async function AdminDashboardPage() {
   // Fetch real metrics & recent AI summaries from DB
-  const [totalArticles, totalUsers, activeSources, recentSummaries] = await Promise.all([
+  const [totalArticles, totalUsers, activeSources, dbSummaries] = await Promise.all([
     prisma.article.count(),
     prisma.user.count(),
     prisma.source.count({ where: { isActive: true } }),
     prisma.aISummary.findMany({
-      take: 5,
+      take: 8,
       orderBy: { generatedAt: "desc" },
-      include: { article: { select: { title: true } } },
+      include: { article: { select: { title: true, category: { select: { name: true } } } } },
     }),
   ]);
+
+  const initialSummaries = dbSummaries.map((s) => ({
+    id: s.id,
+    formattedTime: s.generatedAt ? new Date(s.generatedAt).toLocaleTimeString() : "Recently",
+    title: s.article?.title || s.articleId,
+    category: s.article?.category?.name || "General",
+    model: s.model,
+  }));
 
   const cards = [
     { title: "Total Articles", value: totalArticles.toLocaleString(), icon: <FileText className="h-4 w-4 text-muted-foreground" /> },
@@ -49,33 +58,7 @@ export default async function AdminDashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-8">
         <AiProcessingFlow />
-        
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Recent AI Summaries</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentSummaries.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No summaries generated yet.</p>
-              ) : (
-                recentSummaries.map((s) => (
-                  <div key={s.id} className="flex items-center gap-4">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <div className="flex-1 space-y-1 min-w-0">
-                      <p className="text-sm font-medium leading-none truncate">
-                        {s.article?.title || s.articleId}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {s.generatedAt ? new Date(s.generatedAt).toLocaleTimeString() : "Recently"}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <RecentAiSummaries initialSummaries={initialSummaries} />
       </div>
     </div>
   );
