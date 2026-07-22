@@ -22,6 +22,7 @@ export function AiProcessingFlow() {
   ]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const lastTimestampRef = useRef<number>(0);
   const seenSummaryIdsRef = useRef<Set<string>>(new Set());
 
   // Auto-scroll to bottom
@@ -31,28 +32,45 @@ export function AiProcessingFlow() {
     }
   }, [logs]);
 
-  // Poll for background Cron Job AI completions every 6 seconds
+  // Poll for background Cron Job AI completions every 3 seconds
   useEffect(() => {
     const fetchRecentActivity = async () => {
       try {
-        const res = await fetch("/api/admin/ai/activity");
+        const res = await fetch(`/api/admin/ai/activity?since=${lastTimestampRef.current}`);
         if (!res.ok) return;
         const json = await res.json();
-        if (!json.success || !Array.isArray(json.data)) return;
+        if (!json.success) return;
+
+        if (json.timestamp) {
+          lastTimestampRef.current = json.timestamp;
+        }
 
         const newLogs: LogEntry[] = [];
-        for (const item of json.data) {
-          if (!seenSummaryIdsRef.current.has(item.id)) {
-            seenSummaryIdsRef.current.add(item.id);
-            // Ignore pre-existing items on initial load so we don't flood the terminal
-            if (seenSummaryIdsRef.current.size > json.data.length) {
-              const articleTitle = item.article?.title || item.articleId;
-              const category = item.article?.category?.name || "General";
-              newLogs.push({
-                id: item.id,
-                type: "success",
-                message: `[CRON LIVE SYNC]: ✨ AI Summary generated for "${articleTitle}" (${category})`,
-              });
+
+        // 1. Process rich cron logs from server buffer
+        if (Array.isArray(json.logs)) {
+          for (const item of json.logs) {
+            newLogs.push({
+              id: item.id || Math.random().toString(36).substring(2, 9),
+              type: item.type || "info",
+              message: item.message,
+            });
+          }
+        }
+
+        // 2. Process DB summaries fallback
+        if (Array.isArray(json.summaries)) {
+          for (const item of json.summaries) {
+            if (!seenSummaryIdsRef.current.has(item.id)) {
+              seenSummaryIdsRef.current.add(item.id);
+              if (seenSummaryIdsRef.current.size > json.summaries.length) {
+                const articleTitle = item.article?.title || item.articleId;
+                newLogs.push({
+                  id: item.id,
+                  type: "success",
+                  message: `[CRON LIVE SYNC] ✅ Success: Generated summary for "${articleTitle}"`,
+                });
+              }
             }
           }
         }
@@ -65,10 +83,8 @@ export function AiProcessingFlow() {
       }
     };
 
-    // Initial fill of seen IDs
     fetchRecentActivity();
-
-    const interval = setInterval(fetchRecentActivity, 6000);
+    const interval = setInterval(fetchRecentActivity, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -78,7 +94,7 @@ export function AiProcessingFlow() {
     setIsProcessing(true);
     setLogs((prev) => [
       ...prev,
-      { id: Math.random().toString(36).substr(2, 9), type: "info", message: "🚀 Manual AI Processing Loop Triggered..." },
+      { id: Math.random().toString(36).substring(2, 9), type: "info", message: "🚀 Manual AI Processing Loop Triggered..." },
     ]);
 
     const eventSource = new EventSource("/api/admin/ai/stream");
@@ -89,7 +105,7 @@ export function AiProcessingFlow() {
         const data = JSON.parse(event.data);
         setLogs((prev) => [
           ...prev,
-          { id: Math.random().toString(36).substr(2, 9), type: data.type, message: data.message },
+          { id: Math.random().toString(36).substring(2, 9), type: data.type, message: data.message },
         ]);
 
         if (data.type === "success" && data.message.includes("All articles processed")) {
@@ -105,7 +121,7 @@ export function AiProcessingFlow() {
       console.error("EventSource failed:", error);
       setLogs((prev) => [
         ...prev,
-        { id: Math.random().toString(36).substr(2, 9), type: "error", message: "Connection lost or process completed." },
+        { id: Math.random().toString(36).substring(2, 9), type: "error", message: "Connection lost or process completed." },
       ]);
       eventSource.close();
       setIsProcessing(false);
@@ -119,7 +135,7 @@ export function AiProcessingFlow() {
     }
     setLogs((prev) => [
       ...prev,
-      { id: Math.random().toString(36).substr(2, 9), type: "error", message: "🛑 Processing stopped by user." },
+      { id: Math.random().toString(36).substring(2, 9), type: "error", message: "🛑 Processing stopped by user." },
     ]);
     setIsProcessing(false);
   };

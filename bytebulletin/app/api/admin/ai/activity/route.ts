@@ -1,19 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { auth } from "@/lib/auth/config";
+import { getCronLogs } from "@/lib/ai/cron-logs";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch the 10 most recently created/updated AI Summaries
+    const { searchParams } = new URL(request.url);
+    const since = parseInt(searchParams.get("since") || "0", 10);
+
+    // Fetch cron logs generated after `since` timestamp
+    const cronLogs = getCronLogs(since);
+
+    // Fetch recent DB summaries as fallback
     const recentSummaries = await prisma.aISummary.findMany({
-      take: 10,
+      take: 5,
       orderBy: {
         createdAt: "desc",
       },
@@ -22,8 +29,6 @@ export async function GET() {
           select: {
             id: true,
             title: true,
-            slug: true,
-            publishedAt: true,
             category: { select: { name: true } },
           },
         },
@@ -32,7 +37,9 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: recentSummaries,
+      logs: cronLogs,
+      summaries: recentSummaries,
+      timestamp: Date.now(),
     });
   } catch (error) {
     console.error("[AI Activity Endpoint Error]:", error);
