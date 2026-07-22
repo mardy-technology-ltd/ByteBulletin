@@ -4,6 +4,8 @@ import { ArticleListItem } from "@/components/ui/cards/article-list-item";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getArticleImage } from "@/lib/utils/image";
+import { InfiniteCategoryFeed } from "@/components/common/infinite-category-feed";
+import { FeedArticleItem } from "@/actions/article.actions";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -21,11 +23,24 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
   
-  // Use repository to fetch real data
-  const articles = await ArticleRepository.getByCategory(slug);
+  // Use repository to fetch initial paginated articles for this category
+  const paginatedResult = await ArticleRepository.getPaginatedByCategory(slug, 1, 7);
+  const articles = paginatedResult.articles;
 
   const featuredArticle = articles.length > 0 ? articles[0] : null;
   const remainingArticles = articles.length > 1 ? articles.slice(1) : [];
+
+  // Format initial SSR items for client feed
+  const initialFormattedItems: FeedArticleItem[] = remainingArticles.map((article: any) => ({
+    id: article.id,
+    title: article.title,
+    slug: article.slug,
+    excerpt: article.excerpt,
+    imageUrl: getArticleImage(article.imageUrl, slug, article.id),
+    sourceName: article.source.name,
+    publishedAt: article.publishedAt.toISOString(),
+    isAiSummarized: !!article.aiSummary,
+  }));
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-4 md:px-8">
@@ -51,26 +66,40 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         />
       )}
 
-      <div className="flex flex-col mt-4">
-        {remainingArticles.length > 0 ? (
-          remainingArticles.map((article: any) => (
-            <ArticleListItem 
-              key={article.id}
-              id={article.id}
-              title={article.title}
-              slug={article.slug}
-              excerpt={article.excerpt}
-              sourceName={article.source.name}
-              publishedAt={article.publishedAt}
-              isAiSummarized={!!article.aiSummary}
-              imageUrl={getArticleImage(article.imageUrl, slug, article.id)}
+      <div className="mt-6">
+        {initialFormattedItems.length > 0 ? (
+          <>
+            <InfiniteCategoryFeed 
+              categorySlug={slug}
+              initialArticles={initialFormattedItems}
+              initialHasMore={paginatedResult.hasMore}
+              excludeHeroId={featuredArticle?.id}
             />
-          ))
+
+            {/* Fallback for non-JS web crawlers */}
+            <noscript>
+              <div className="flex flex-col">
+                {initialFormattedItems.map((article) => (
+                  <ArticleListItem 
+                    key={article.id}
+                    id={article.id}
+                    title={article.title}
+                    slug={article.slug}
+                    excerpt={article.excerpt}
+                    sourceName={article.sourceName}
+                    publishedAt={new Date(article.publishedAt)}
+                    isAiSummarized={article.isAiSummarized}
+                    imageUrl={article.imageUrl}
+                  />
+                ))}
+              </div>
+            </noscript>
+          </>
         ) : (
           !featuredArticle && (
             <div className="py-16 text-center border border-border/50 rounded-2xl bg-muted/10">
               <h3 className="text-xl font-bold tracking-tight mb-2">No articles found</h3>
-              <p className="text-muted-foreground">We couldn't find any recent articles in this category.</p>
+              <p className="text-muted-foreground">We couldn&apos;t find any recent articles in this category.</p>
             </div>
           )
         )}
@@ -82,3 +111,4 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 function featuredHeroImageUrl(article: any) {
   return article.imageUrl;
 }
+

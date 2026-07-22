@@ -126,6 +126,38 @@ export class ArticleRepository {
   }
 
   /**
+   * Fetches paginated articles by category for infinite scroll.
+   */
+  static async getPaginatedByCategory(slug: string, page = 1, limit = 10, excludeId?: string) {
+    const skip = (page - 1) * limit;
+    
+    const articles = await prisma.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        category: { slug },
+        ...(excludeId ? { id: { not: excludeId } } : {}),
+      },
+      skip,
+      take: limit + 1, // Fetch 1 extra item to check if there are more pages
+      orderBy: { publishedAt: "desc" },
+      include: {
+        source: { select: { name: true } },
+        category: { select: { slug: true } },
+        aiSummary: { select: { id: true } },
+      },
+    });
+
+    const hasMore = articles.length > limit;
+    const items = hasMore ? articles.slice(0, limit) : articles;
+
+    return {
+      articles: items,
+      hasMore,
+      nextPage: hasMore ? page + 1 : null,
+    };
+  }
+
+  /**
    * Fetches a single article by its slug.
    */
   static async getBySlug(slug: string) {

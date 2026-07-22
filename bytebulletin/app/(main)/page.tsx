@@ -12,10 +12,11 @@ import { FeedArticleItem } from "@/actions/article.actions";
 export const revalidate = 60;
 
 export default async function Home() {
+  const featuredHero = await ArticleRepository.getFeaturedHero();
+
   // Fetch all required data in parallel for performance
-  const [featuredHero, latestArticles, trendingArticles, breakingNews] = await Promise.all([
-    ArticleRepository.getFeaturedHero(),
-    ArticleRepository.getLatest(6),
+  const [latestResult, trendingArticles, breakingNews] = await Promise.all([
+    ArticleRepository.getPaginatedLatest(1, 6, featuredHero?.id),
     ArticleRepository.getTrending(5),
     ArticleRepository.getBreakingNews(3),
   ]);
@@ -27,13 +28,8 @@ export default async function Home() {
     slug: item.slug
   }));
 
-  // Ensure we don't display the featured hero article again in the latest list
-  const filteredLatest = featuredHero 
-    ? latestArticles.filter((a: any) => a.id !== featuredHero.id) 
-    : latestArticles;
-
   // Format initial SSR batch of articles for the feed
-  const initialFormattedArticles: FeedArticleItem[] = filteredLatest.map((article: any) => ({
+  const initialFormattedArticles: FeedArticleItem[] = latestResult.articles.map((article: any) => ({
     id: article.id,
     title: article.title,
     slug: article.slug,
@@ -79,7 +75,8 @@ export default async function Home() {
               {initialFormattedArticles.length > 0 ? (
                 <>
                   <InfiniteArticleFeed 
-                    initialArticles={initialFormattedArticles} 
+                    initialArticles={initialFormattedArticles}
+                    initialHasMore={latestResult.hasMore}
                     excludeHeroId={featuredHero?.id} 
                   />
                   

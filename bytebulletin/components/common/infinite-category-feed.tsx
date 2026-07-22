@@ -2,18 +2,24 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ArticleListItem } from "@/components/ui/cards/article-list-item";
-import { fetchMoreArticlesAction, FeedArticleItem } from "@/actions/article.actions";
+import { fetchMoreCategoryArticlesAction, FeedArticleItem } from "@/actions/article.actions";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
-interface InfiniteArticleFeedProps {
+interface InfiniteCategoryFeedProps {
+  categorySlug: string;
   initialArticles: FeedArticleItem[];
   initialHasMore: boolean;
   excludeHeroId?: string;
 }
 
-export function InfiniteArticleFeed({ initialArticles, initialHasMore, excludeHeroId }: InfiniteArticleFeedProps) {
+export function InfiniteCategoryFeed({
+  categorySlug,
+  initialArticles,
+  initialHasMore,
+  excludeHeroId,
+}: InfiniteCategoryFeedProps) {
   const [articles, setArticles] = useState<FeedArticleItem[]>(initialArticles);
-  const [page, setPage] = useState(2); // Page 1 was loaded on server
+  const [page, setPage] = useState(2); // Page 1 was rendered on server
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -29,7 +35,7 @@ export function InfiniteArticleFeed({ initialArticles, initialHasMore, excludeHe
           fetchingRef.current = true;
           setIsLoading(true);
           try {
-            const res = await fetchMoreArticlesAction(page, 6, excludeHeroId);
+            const res = await fetchMoreCategoryArticlesAction(categorySlug, page, 8, excludeHeroId);
             if (res.articles.length > 0) {
               setArticles((prev) => {
                 const existingIds = new Set(prev.map((a) => a.id));
@@ -42,7 +48,7 @@ export function InfiniteArticleFeed({ initialArticles, initialHasMore, excludeHe
               setHasMore(false);
             }
           } catch (error) {
-            console.error("Failed to load more articles", error);
+            console.error("Failed to load more category articles", error);
             setHasMore(false);
           } finally {
             setIsLoading(false);
@@ -59,7 +65,7 @@ export function InfiniteArticleFeed({ initialArticles, initialHasMore, excludeHe
     return () => {
       if (currentSentinel) observer.unobserve(currentSentinel);
     };
-  }, [page, hasMore, excludeHeroId]);
+  }, [categorySlug, page, hasMore, excludeHeroId]);
 
   return (
     <div className="flex flex-col space-y-2">
@@ -84,14 +90,14 @@ export function InfiniteArticleFeed({ initialArticles, initialHasMore, excludeHe
         {isLoading && (
           <div className="flex items-center space-x-2 text-primary font-medium text-sm animate-pulse bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
             <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <span>Loading more stories...</span>
+            <span>Loading more stories in {categorySlug.replace("-", " ")}...</span>
           </div>
         )}
 
         {!hasMore && articles.length > 0 && (
           <div className="flex items-center space-x-2 text-muted-foreground text-xs py-4">
             <CheckCircle2 className="w-4 h-4 text-violet-500" />
-            <span>You&apos;re all caught up with the latest stories.</span>
+            <span>You&apos;re all caught up with {categorySlug.replace("-", " ")} stories.</span>
           </div>
         )}
       </div>

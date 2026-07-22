@@ -47,3 +47,38 @@ export async function fetchMoreArticlesAction(
     };
   }
 }
+
+export async function fetchMoreCategoryArticlesAction(
+  categorySlug: string,
+  page: number,
+  limit = 10,
+  excludeId?: string
+): Promise<{ articles: FeedArticleItem[]; hasMore: boolean; nextPage: number | null }> {
+  try {
+    const result = await ArticleRepository.getPaginatedByCategory(categorySlug, page, limit, excludeId);
+
+    const formattedArticles: FeedArticleItem[] = result.articles.map((article: any) => ({
+      id: article.id,
+      title: article.title,
+      slug: article.slug,
+      excerpt: article.excerpt,
+      imageUrl: getArticleImage(article.imageUrl, categorySlug, article.id),
+      sourceName: article.source.name,
+      publishedAt: article.publishedAt.toISOString(),
+      isAiSummarized: !!article.aiSummary,
+    }));
+
+    return {
+      articles: formattedArticles,
+      hasMore: result.hasMore,
+      nextPage: result.nextPage,
+    };
+  } catch (error) {
+    console.error("[fetchMoreCategoryArticlesAction Error]:", error);
+    return {
+      articles: [],
+      hasMore: false,
+      nextPage: null,
+    };
+  }
+}
