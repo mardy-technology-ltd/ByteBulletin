@@ -7,10 +7,27 @@ import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/auth/config";
 import { Search } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
+import { prisma } from "@/lib/db/prisma";
 import { UserNav } from "./user-nav";
 
 export async function Header() {
   const session = await auth();
+
+  let user = session?.user;
+
+  if (session?.user?.id) {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, name: true, email: true, image: true, role: true },
+    });
+    if (dbUser) {
+      user = {
+        ...session.user,
+        name: dbUser.name || session.user.name,
+        image: dbUser.image || session.user.image,
+      };
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-xs">
@@ -46,8 +63,8 @@ export async function Header() {
               />
             </form>
             <div className="hidden md:flex items-center gap-2">
-              {session?.user ? (
-                <UserNav user={session.user} />
+              {user ? (
+                <UserNav user={user} />
               ) : (
                 <div className="flex items-center gap-2">
                   <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
@@ -60,7 +77,7 @@ export async function Header() {
               )}
             </div>
             <ThemeToggle />
-            <MobileNav session={session} />
+            <MobileNav session={{ ...session, user }} />
           </nav>
         </div>
       </div>

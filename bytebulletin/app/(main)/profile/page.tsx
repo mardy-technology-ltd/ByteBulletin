@@ -2,10 +2,9 @@ import { auth } from "@/lib/auth/config";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ProfileForm } from "./profile-form";
+import { AvatarUpload } from "./avatar-upload";
 import { Bookmark, Shield, CheckCircle2, Calendar, Mail, User as UserIcon, ArrowRight } from "lucide-react";
 
 export const metadata = {
@@ -40,16 +39,6 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const getInitials = (name?: string | null) => {
-    if (!name) return "U";
-    const parts = name.trim().split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase();
-  };
-
-  const initials = getInitials(user.name);
   const joinedDate = new Date(user.createdAt).toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
@@ -62,12 +51,7 @@ export default async function ProfilePage() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-violet-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
-          <Avatar className="w-24 h-24 border-2 border-violet-500/40 shadow-md">
-            {user.image && <AvatarImage src={user.image} alt={user.name || "User avatar"} />}
-            <AvatarFallback className="bg-gradient-to-br from-violet-600 via-indigo-600 to-cyan-600 text-white text-2xl font-extrabold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <AvatarUpload user={user} />
 
           <div className="flex-1 space-y-2">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
