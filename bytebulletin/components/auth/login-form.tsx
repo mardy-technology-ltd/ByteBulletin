@@ -24,15 +24,17 @@ export function LoginForm() {
     setError(null);
     try {
       const res = await loginUser(data);
-      if (res?.error) {
+      if (res?.requiresVerification && res?.email) {
+        router.push(`/verify-email?email=${encodeURIComponent(res.email)}&unverified=true`);
+      } else if (res?.error) {
         setError(res.error);
       } else {
-      if (res?.role === "ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push("/");
-      }
-      router.refresh();
+        if (res?.role === "ADMIN") {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
+        router.refresh();
       }
     } catch (err) {
       setError("Something went wrong");
