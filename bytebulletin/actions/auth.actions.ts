@@ -6,8 +6,13 @@ import { loginSchema, registerSchema, LoginInput, RegisterInput } from "@/lib/va
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 
-import { generateVerificationToken, validateVerificationToken } from "@/lib/auth/tokens";
-import { sendVerificationEmail } from "@/lib/email/resend";
+import {
+  generateVerificationToken,
+  validateVerificationToken,
+  generatePasswordResetToken,
+  validatePasswordResetToken,
+} from "@/lib/auth/tokens";
+import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email/resend";
 
 /**
  * Handles user sign in via Credentials provider
@@ -178,6 +183,89 @@ export async function resendVerificationOtpAction(email: string) {
   } catch (error) {
     console.error("Resend OTP Error:", error);
     return { success: false, error: "Failed to resend verification code" };
+  }
+}
+
+/**
+ * Checks account existence and sends password reset link via Resend API
+ */
+export async function sendPasswordResetLinkAction(email: string) {
+  try {
+    if (!email || !email.includes("@")) {
+      return { success: false, error: "Please enter a valid email address." };
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        error: "No account found with this email address. Please check your email or sign up.",
+      };
+    }
+
+    const { token } = await generatePasswordResetToken(normalizedEmail);
+    const emailResult = await sendPasswordResetEmail(normalizedEmail, token);
+
+    if (!emailResult.success) {
+      console.warn("[Password Reset Link Email Warning]:", emailResult.error);
+    }
+
+    return {
+      success: true,
+      message: "We have sent a password reset link to your email address.",
+    };
+  } catch (error: any) {
+    console.error("[Password Reset Link Exception]:", error?.message || error);
+    return { success: false, error: error?.message || "Failed to send password reset email. Please try again." };
+  }
+}
+
+/**
+ * Resets user password after token validation
+ */
+export async function resetPasswordAction(token: string, newPassword: string) {
+  try {
+    if (!newPassword || newPassword.length < 8) {
+      return { success: false, error: "Password must be at least 8 characters long." };
+    }
+
+    const validation = await validatePasswordResetToken(token);
+    if (!validation.valid || !validation.passwordResetToken) {
+      return { success: false, error: validation.error || "Invalid or expired reset token." };
+    }
+
+    const { email, id } = validation.passwordResetToken;
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user password in DB
+    await prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
+
+    // Delete token after successful use (Resilient Raw SQL Fallback)
+    try {
+      if ((prisma as any).passwordResetToken) {
+        await (prisma as any).passwordResetToken.delete({ where: { id } });
+      } else {
+        await prisma.$executeRawUnsafe(`DELETE FROM "password_reset_tokens" WHERE "id" = $1`, id);
+      }
+    } catch (e) {
+      await prisma.$executeRawUnsafe(`DELETE FROM "password_reset_tokens" WHERE "id" = $1`, id);
+    }
+
+    return {
+      success: true,
+      message: "Your password has been reset successfully! You can now log in.",
+    };
+  } catch (error: any) {
+    console.error("Reset Password Action Error:", error?.message || error);
+    return { success: false, error: error?.message || "Failed to reset password. Please try again." };
   }
 }
 

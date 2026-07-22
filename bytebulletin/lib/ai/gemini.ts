@@ -12,7 +12,7 @@ const groq = createGroq({
 // The strict JSON Schema for the AI output
 const ArticleEnhancementSchema = z.object({
   summary: z.string().describe("A concise 2-3 sentence overview of the article."),
-  keyPoints: z.array(z.string()).describe("An array of 3-5 critical bullet points."),
+  keyPoints: z.array(z.string()).describe("An array of 4-5 critical bullet points summarizing key facts."),
   seoTitle: z.string().describe("A click-optimized, highly searchable title under 60 characters."),
   metaDescription: z.string().describe("An SEO-optimized summary under 160 characters."),
   ogDescription: z.string().describe("An engaging description for social media sharing."),

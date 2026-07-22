@@ -1,6 +1,7 @@
 import { AISummarySnippet } from "@/components/common/ai-summary-snippet";
 import { ShareBar } from "@/components/common/share-bar";
 import { ProgressBar } from "@/components/common/progress-bar";
+import { FormattedArticleBody } from "@/components/article/formatted-article-body";
 import { Metadata } from "next";
 import { ArticleRepository } from "@/repositories/article.repository";
 import { notFound } from "next/navigation";
@@ -154,9 +155,11 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
           />
         )}
 
-        <div 
-          className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-heading prose-a:text-primary hover:prose-a:text-primary/80 prose-img:rounded-xl mt-8"
-          dangerouslySetInnerHTML={{ __html: article.content || `<p>${article.excerpt}</p>` }}
+        <FormattedArticleBody
+          content={article.content}
+          excerpt={article.excerpt}
+          sourceName={article.source.name}
+          originalUrl={article.originalUrl}
         />
 
         <ShareBar 

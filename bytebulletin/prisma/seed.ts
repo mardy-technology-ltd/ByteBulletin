@@ -85,9 +85,11 @@ async function main() {
         create: {
           summary: 'OpenAI released a new reasoning model that can think before responding, improving its capabilities in complex tasks.',
           keyPoints: [
-            'New models spend more time thinking before answering.',
-            'Better at complex reasoning in math, coding, and science.',
-            'Available to ChatGPT Plus users.'
+            'New reasoning models spend more time thinking before answering complex prompts.',
+            'Outperforms previous architectures in complex math, coding benchmarks, and scientific analysis.',
+            'Features improved chain-of-thought verification for higher accuracy.',
+            'Available immediately to ChatGPT Plus and Team subscribers worldwide.',
+            'Enterprise access rolling out with customized API rate limits.'
           ]
         }
       },
@@ -119,9 +121,11 @@ async function main() {
         create: {
           summary: 'Apple announced the iPhone 16 series with a new camera button and larger screens for Pro models.',
           keyPoints: [
-            'iPhone 16 and 16 Pro announced.',
-            'New dedicated camera control button added.',
-            'Apple Watch Series 10 and new AirPods also revealed.'
+            'iPhone 16 and 16 Pro officially unveiled with A18 and A18 Pro Bionic chips.',
+            'Introduces a new capacitive Camera Control button with tactile haptic feedback.',
+            'Pro models expand screen sizes to 6.3-inch and 6.9-inch with ultra-thin bezels.',
+            'Apple Watch Series 10 features a 30% larger wide-angle OLED display.',
+            'AirPods 4 get active noise cancellation for the first time in an open-ear design.'
           ]
         }
       }
@@ -146,9 +150,10 @@ async function main() {
         create: {
           summary: 'Google is updating AI Overviews in Search to include inline links to sources.',
           keyPoints: [
-            'AI Overviews get inline links.',
-            'Makes it easier to verify information.',
-            'Rolling out to users gradually.'
+            'Google Search AI Overviews receive prominent in-line publisher citation links.',
+            'Designed to boost referral traffic back to original content creators.',
+            'Tests show improved source verification and user engagement metrics.',
+            'Global rollout starting in North America and expanding to international regions.'
           ]
         }
       }

@@ -67,7 +67,7 @@ export function AISummarySnippet({
                   AI Key Takeaways
                 </h3>
                 <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-extrabold border-violet-500/40 text-violet-500 bg-violet-500/10">
-                  <Zap className="w-3 h-3 mr-1 fill-current" /> Gemini AI
+                  <Zap className="w-3 h-3 mr-1 fill-current" /> AI Powered
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">Synthesized summary of key facts</p>
@@ -100,7 +100,7 @@ export function AISummarySnippet({
                   className="flex items-start space-x-3.5 p-3.5 sm:p-4 rounded-2xl border border-border/40 bg-background/50 hover:bg-card hover:border-violet-500/30 transition-all duration-200"
                 >
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-500/15 text-violet-500 dark:text-violet-400 font-extrabold text-xs shrink-0 mt-0.5 border border-violet-500/30">
-                    0{index + 1}
+                    {index + 1 < 10 ? `0${index + 1}` : index + 1}
                   </span>
                   <p className="text-sm sm:text-base leading-relaxed text-foreground/90 font-medium">
                     {point}

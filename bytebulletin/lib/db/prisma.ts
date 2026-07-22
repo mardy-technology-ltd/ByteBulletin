@@ -34,7 +34,7 @@ function createPrismaClient(): PrismaClient {
 
 function getPrismaInstance(): PrismaClient {
   const gPrisma = (globalThis as any).prisma;
-  if (!gPrisma || !gPrisma.articleReaction || !gPrisma.comment) {
+  if (!gPrisma || !gPrisma.articleReaction || !gPrisma.comment || !gPrisma.passwordResetToken) {
     const client = createPrismaClient();
     if (process.env.NODE_ENV !== "production") {
       (globalThis as any).prisma = client;
@@ -46,7 +46,14 @@ function getPrismaInstance(): PrismaClient {
 
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {
-    const instance = getPrismaInstance() as any;
+    let instance = getPrismaInstance() as any;
+
+    // Auto-heal: If a model property is accessed but undefined on current instance, purge cache and recreate
+    if (typeof prop === "string" && !prop.startsWith("$") && !prop.startsWith("_") && instance[prop] === undefined) {
+      delete (globalThis as any).prisma;
+      instance = getPrismaInstance() as any;
+    }
+
     const value = instance[prop];
     return typeof value === "function" ? value.bind(instance) : value;
   },
