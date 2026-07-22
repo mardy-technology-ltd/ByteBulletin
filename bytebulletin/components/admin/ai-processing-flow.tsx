@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Square, Loader2 } from "lucide-react";
+import { Play, Square, Loader2, Radio } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 type LogEntry = {
@@ -13,22 +13,73 @@ type LogEntry = {
 
 export function AiProcessingFlow() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([
+    {
+      id: "init",
+      type: "info",
+      message: "⚡ Live Sync Active: Monitoring background Cron Job & manual AI runs...",
+    },
+  ]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const seenSummaryIdsRef = useRef<Set<string>>(new Set());
 
+  // Auto-scroll to bottom
   useEffect(() => {
-    // Auto-scroll to bottom
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs]);
 
+  // Poll for background Cron Job AI completions every 6 seconds
+  useEffect(() => {
+    const fetchRecentActivity = async () => {
+      try {
+        const res = await fetch("/api/admin/ai/activity");
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json.success || !Array.isArray(json.data)) return;
+
+        const newLogs: LogEntry[] = [];
+        for (const item of json.data) {
+          if (!seenSummaryIdsRef.current.has(item.id)) {
+            seenSummaryIdsRef.current.add(item.id);
+            // Ignore pre-existing items on initial load so we don't flood the terminal
+            if (seenSummaryIdsRef.current.size > json.data.length) {
+              const articleTitle = item.article?.title || item.articleId;
+              const category = item.article?.category?.name || "General";
+              newLogs.push({
+                id: item.id,
+                type: "success",
+                message: `[CRON LIVE SYNC]: ✨ AI Summary generated for "${articleTitle}" (${category})`,
+              });
+            }
+          }
+        }
+
+        if (newLogs.length > 0) {
+          setLogs((prev) => [...prev, ...newLogs]);
+        }
+      } catch (err) {
+        // Silent catch for background poll
+      }
+    };
+
+    // Initial fill of seen IDs
+    fetchRecentActivity();
+
+    const interval = setInterval(fetchRecentActivity, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
   const startProcessing = () => {
     if (isProcessing) return;
     
-    setLogs([]);
     setIsProcessing(true);
+    setLogs((prev) => [
+      ...prev,
+      { id: Math.random().toString(36).substr(2, 9), type: "info", message: "🚀 Manual AI Processing Loop Triggered..." },
+    ]);
 
     const eventSource = new EventSource("/api/admin/ai/stream");
     eventSourceRef.current = eventSource;
@@ -54,7 +105,7 @@ export function AiProcessingFlow() {
       console.error("EventSource failed:", error);
       setLogs((prev) => [
         ...prev,
-        { id: Math.random().toString(36).substr(2, 9), type: "error", message: "Connection lost or process failed." },
+        { id: Math.random().toString(36).substr(2, 9), type: "error", message: "Connection lost or process completed." },
       ]);
       eventSource.close();
       setIsProcessing(false);
@@ -74,11 +125,14 @@ export function AiProcessingFlow() {
   };
 
   return (
-    <Card className="col-span-4 flex flex-col overflow-hidden border-border/50 bg-slate-950 text-slate-300">
+    <Card className="col-span-4 flex flex-col overflow-hidden border-border/50 bg-slate-950 text-slate-300 shadow-md">
       <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-slate-950/80 backdrop-blur pb-3 pt-4">
         <CardTitle className="text-sm font-mono text-slate-100 flex items-center gap-2">
           <span>~/ai/processing-flow</span>
-          {isProcessing && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+          <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-sans font-normal ml-2 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded-full">
+            <Radio className="h-3 w-3 animate-pulse text-emerald-400" /> Live Sync
+          </span>
+          {isProcessing && <Loader2 className="h-3 w-3 animate-spin text-primary ml-1" />}
         </CardTitle>
         <div className="flex space-x-2">
           {isProcessing ? (
@@ -98,28 +152,22 @@ export function AiProcessingFlow() {
           ref={scrollRef}
           className="h-[350px] w-full overflow-y-auto bg-slate-950 p-4 font-mono text-xs leading-relaxed"
         >
-          {logs.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-slate-600">
-              <p>Ready to process. Click "Run ai-processor" to start.</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {logs.map((log) => (
-                <div key={log.id} className="flex gap-2">
-                  <span className="text-slate-500 select-none">{">"}</span>
-                  <span className={`
-                    ${log.type === 'error' ? 'text-red-400' : ''}
-                    ${log.type === 'success' ? 'text-green-400' : ''}
-                    ${log.type === 'info' ? 'text-blue-400' : ''}
-                    ${log.type === 'wait' ? 'text-amber-400 animate-pulse' : ''}
-                    ${log.type === 'process' ? 'text-slate-300' : ''}
-                  `}>
-                    {log.message}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="space-y-1">
+            {logs.map((log) => (
+              <div key={log.id} className="flex gap-2">
+                <span className="text-slate-500 select-none">{">"}</span>
+                <span className={`
+                  ${log.type === 'error' ? 'text-red-400' : ''}
+                  ${log.type === 'success' ? 'text-green-400 font-semibold' : ''}
+                  ${log.type === 'info' ? 'text-blue-400' : ''}
+                  ${log.type === 'wait' ? 'text-amber-400 animate-pulse' : ''}
+                  ${log.type === 'process' ? 'text-slate-300' : ''}
+                `}>
+                  {log.message}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
