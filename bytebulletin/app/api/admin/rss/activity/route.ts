@@ -21,7 +21,7 @@ export async function GET() {
                 name: true,
               },
             },
-            iconUrl: true,
+            logoUrl: true,
           },
         },
       },

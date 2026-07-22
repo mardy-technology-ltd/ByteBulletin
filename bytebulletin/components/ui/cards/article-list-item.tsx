@@ -25,9 +25,9 @@ export function ArticleListItem({
   return (
     <Link 
       href={`/news/${slug}`} 
-      className="group flex flex-col sm:flex-row gap-5 py-6 border-b border-border/50 last:border-0 transition-colors hover:bg-muted/20 px-2 sm:px-4 rounded-xl -mx-2 sm:-mx-4"
+      className="group flex flex-col sm:flex-row gap-5 py-5 border-b border-border/40 last:border-0 transition-all duration-300 hover:bg-card/50 hover:border-primary/30 px-3 sm:px-5 rounded-2xl -mx-3 sm:-mx-5 hover:shadow-xs"
     >
-      <div className="relative aspect-[3/2] sm:w-48 md:w-56 shrink-0 overflow-hidden rounded-lg bg-muted">
+      <div className="relative aspect-[3/2] sm:w-48 md:w-56 shrink-0 overflow-hidden rounded-xl bg-muted border border-border/30">
         <Image
           src={imageUrl}
           alt={title}
@@ -43,8 +43,8 @@ export function ArticleListItem({
             {sourceName}
           </span>
           {isAiSummarized && (
-            <span className="flex items-center text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500 uppercase tracking-widest">
-              <span className="mr-1">✦</span> AI
+            <span className="inline-flex items-center text-[10px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 uppercase tracking-widest bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">
+              <span className="mr-1 text-violet-500">✦</span> AI Summary
             </span>
           )}
         </div>
@@ -54,7 +54,7 @@ export function ArticleListItem({
         </h3>
         
         {excerpt && (
-          <p className="line-clamp-2 text-sm text-muted-foreground mb-3 leading-relaxed">
+          <p className="line-clamp-2 text-sm text-muted-foreground/90 mb-3 leading-relaxed">
             {excerpt}
           </p>
         )}
