@@ -147,7 +147,11 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
         </header>
         
         {article.aiSummary && (
-          <AISummarySnippet summaryPoints={article.aiSummary.keyPoints} />
+          <AISummarySnippet
+            summary={article.aiSummary.summary}
+            summaryPoints={article.aiSummary.keyPoints}
+            sentiment={article.aiSummary.sentiment}
+          />
         )}
 
         <div 
