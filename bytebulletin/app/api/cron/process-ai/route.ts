@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       orderBy: {
         publishedAt: 'desc'
       },
-      take: 5,
+      take: 2,
     });
 
     if (unprocessedArticles.length === 0) {
