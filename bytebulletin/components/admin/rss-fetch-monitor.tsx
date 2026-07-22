@@ -33,7 +33,7 @@ export function RssFetchMonitor({ initialLogs }: { initialLogs?: RssLogItem[] })
     };
 
     fetchRssActivity();
-    const interval = setInterval(fetchRssActivity, 4000);
+    const interval = setInterval(fetchRssActivity, 2500);
     return () => clearInterval(interval);
   }, []);
 

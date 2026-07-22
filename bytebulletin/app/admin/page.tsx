@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, FileText, Rss, Users } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
+import { formatBdTime } from "@/lib/utils/format-time";
 
 import { AiProcessingFlow } from "@/components/admin/ai-processing-flow";
 import { RecentAiSummaries } from "@/components/admin/recent-ai-summaries";
@@ -33,7 +34,7 @@ export default async function AdminDashboardPage() {
 
   const initialSummaries = dbSummaries.map((s) => ({
     id: s.id,
-    formattedTime: s.generatedAt ? new Date(s.generatedAt).toLocaleTimeString() : "Recently",
+    formattedTime: formatBdTime(s.generatedAt),
     title: s.article?.title || s.articleId,
     category: s.article?.category?.name || "General",
     model: s.model,
@@ -47,7 +48,7 @@ export default async function AdminDashboardPage() {
     articlesFound: l.articlesFound,
     articlesCreated: l.articlesCreated,
     durationMs: l.duration,
-    formattedTime: new Date(l.fetchedAt).toLocaleTimeString(),
+    formattedTime: formatBdTime(l.fetchedAt),
   }));
 
   const cards = [

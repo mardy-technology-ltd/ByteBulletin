@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { formatBdTime } from "@/lib/utils/format-time";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,7 @@ export async function GET() {
     const logs = summaries.map((s) => ({
       id: s.id,
       timestamp: s.generatedAt ? new Date(s.generatedAt).getTime() : Date.now(),
-      formattedTime: s.generatedAt ? new Date(s.generatedAt).toLocaleTimeString() : new Date().toLocaleTimeString(),
+      formattedTime: formatBdTime(s.generatedAt),
       title: s.article?.title || s.articleId,
       category: s.article?.category?.name || "General",
       model: s.model,
