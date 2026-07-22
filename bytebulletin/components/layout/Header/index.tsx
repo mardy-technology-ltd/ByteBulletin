@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/auth/config";
 import { Search } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
+import { DesktopNav } from "./desktop-nav";
 import { prisma } from "@/lib/db/prisma";
 import { UserNav } from "./user-nav";
 
@@ -38,17 +39,7 @@ export async function Header() {
               {siteConfig.name}
             </span>
           </Link>
-          <nav className="hidden md:flex gap-6">
-            {mainNav.map((item, index) => (
-              <Link
-                key={index}
-                href={item.href}
-                className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <DesktopNav />
         </div>
         
         <div className="flex flex-1 items-center justify-end space-x-4">
