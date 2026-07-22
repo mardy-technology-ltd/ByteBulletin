@@ -7,8 +7,8 @@ import { RecentAiSummaries } from "@/components/admin/recent-ai-summaries";
 import { RssFetchMonitor } from "@/components/admin/rss-fetch-monitor";
 
 export default async function AdminDashboardPage() {
-  // Fetch real metrics & recent AI summaries from DB
-  const [totalArticles, totalUsers, activeSources, dbSummaries] = await Promise.all([
+  // Fetch real metrics, recent AI summaries, and recent RSS fetch logs directly from DB
+  const [totalArticles, totalUsers, activeSources, dbSummaries, dbRssLogs] = await Promise.all([
     prisma.article.count(),
     prisma.user.count(),
     prisma.source.count({ where: { isActive: true } }),
@@ -16,6 +16,18 @@ export default async function AdminDashboardPage() {
       take: 8,
       orderBy: { generatedAt: "desc" },
       include: { article: { select: { title: true, category: { select: { name: true } } } } },
+    }),
+    prisma.rssFetchLog.findMany({
+      take: 15,
+      orderBy: { fetchedAt: "desc" },
+      include: {
+        source: {
+          select: {
+            name: true,
+            category: { select: { name: true } },
+          },
+        },
+      },
     }),
   ]);
 
@@ -25,6 +37,17 @@ export default async function AdminDashboardPage() {
     title: s.article?.title || s.articleId,
     category: s.article?.category?.name || "General",
     model: s.model,
+  }));
+
+  const initialRssLogs = dbRssLogs.map((l) => ({
+    id: l.id,
+    sourceName: l.source?.name || "Unknown Source",
+    category: l.source?.category?.name || "General",
+    status: l.status,
+    articlesFound: l.articlesFound,
+    articlesCreated: l.articlesCreated,
+    durationMs: l.duration,
+    formattedTime: new Date(l.fetchedAt).toLocaleTimeString(),
   }));
 
   const cards = [
@@ -59,7 +82,7 @@ export default async function AdminDashboardPage() {
 
       {/* 1. RSS News Fetch Monitor at TOP */}
       <div className="mt-8">
-        <RssFetchMonitor />
+        <RssFetchMonitor initialLogs={initialRssLogs} />
       </div>
 
       {/* 2. AI Summary Processing & Cron Monitor + Recent AI Summaries below */}
