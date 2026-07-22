@@ -5,11 +5,16 @@ import { prisma } from "@/lib/db/prisma";
 import { AiProcessingFlow } from "@/components/admin/ai-processing-flow";
 
 export default async function AdminDashboardPage() {
-  // Fetch real metrics from DB
-  const [totalArticles, totalUsers, activeSources] = await Promise.all([
+  // Fetch real metrics & recent AI summaries from DB
+  const [totalArticles, totalUsers, activeSources, recentSummaries] = await Promise.all([
     prisma.article.count(),
     prisma.user.count(),
     prisma.source.count({ where: { isActive: true } }),
+    prisma.aISummary.findMany({
+      take: 5,
+      orderBy: { generatedAt: "desc" },
+      include: { article: { select: { title: true } } },
+    }),
   ]);
 
   const cards = [
@@ -51,15 +56,23 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">GPT-5 Launch Date Leaked</p>
-                    <p className="text-xs text-muted-foreground">Processed 2 minutes ago</p>
+              {recentSummaries.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No summaries generated yet.</p>
+              ) : (
+                recentSummaries.map((s) => (
+                  <div key={s.id} className="flex items-center gap-4">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <div className="flex-1 space-y-1 min-w-0">
+                      <p className="text-sm font-medium leading-none truncate">
+                        {s.article?.title || s.articleId}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {s.generatedAt ? new Date(s.generatedAt).toLocaleTimeString() : "Recently"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

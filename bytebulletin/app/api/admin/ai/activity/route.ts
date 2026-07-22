@@ -9,7 +9,7 @@ export async function GET() {
     const summaries = await prisma.aISummary.findMany({
       take: 15,
       orderBy: {
-        createdAt: "desc",
+        generatedAt: "desc",
       },
       include: {
         article: {
@@ -31,8 +31,8 @@ export async function GET() {
 
     const logs = summaries.map((s) => ({
       id: s.id,
-      timestamp: new Date(s.createdAt).getTime(),
-      formattedTime: new Date(s.createdAt).toLocaleTimeString(),
+      timestamp: s.generatedAt ? new Date(s.generatedAt).getTime() : Date.now(),
+      formattedTime: s.generatedAt ? new Date(s.generatedAt).toLocaleTimeString() : new Date().toLocaleTimeString(),
       title: s.article?.title || s.articleId,
       category: s.article?.category?.name || "General",
       model: s.model,
