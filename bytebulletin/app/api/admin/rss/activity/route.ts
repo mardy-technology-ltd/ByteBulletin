@@ -15,7 +15,11 @@ export async function GET() {
         source: {
           select: {
             name: true,
-            category: true,
+            category: {
+              select: {
+                name: true,
+              },
+            },
             iconUrl: true,
           },
         },
@@ -25,7 +29,7 @@ export async function GET() {
     const formattedLogs = logs.map((l) => ({
       id: l.id,
       sourceName: l.source?.name || "Unknown Source",
-      category: l.source?.category || "General",
+      category: l.source?.category?.name || "General",
       status: l.status,
       articlesFound: l.articlesFound,
       articlesCreated: l.articlesCreated,
