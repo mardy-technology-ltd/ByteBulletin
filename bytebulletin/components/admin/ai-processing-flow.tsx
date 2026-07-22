@@ -167,6 +167,7 @@ export function AiProcessingFlow() {
           </div>
         </div>
 
+        {/* Manual Run button commented out as background Cron Job handles automatic execution
         <div className="flex space-x-2">
           {isProcessing ? (
             <Button size="sm" variant="destructive" onClick={stopProcessing} className="h-7 text-xs font-mono">
@@ -178,6 +179,7 @@ export function AiProcessingFlow() {
             </Button>
           )}
         </div>
+        */}
       </CardHeader>
       
       <CardContent className="p-0">
