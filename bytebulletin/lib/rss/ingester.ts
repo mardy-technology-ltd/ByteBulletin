@@ -121,16 +121,28 @@ export async function ingestRssFeed(sourceId: string) {
 
 /**
  * Convenience function to process active sources due for a fetch.
- * Processes in parallel & limited batches for fast response within < 10 seconds.
+ * Prioritizes newly added sources (lastFetchedAt is null) then oldest fetched.
  */
 export async function ingestDueSources() {
-  const sources = await prisma.source.findMany({
-    where: { isActive: true },
-    orderBy: {
-      lastFetchedAt: "asc", // Pick oldest fetched sources first
-    },
-    take: 3, // Ingest 3 sources per cron cycle for ultra-fast response
+  // 1. Pick newly added sources that have NEVER been fetched yet (lastFetchedAt: null)
+  const unfetchedSources = await prisma.source.findMany({
+    where: { isActive: true, lastFetchedAt: null },
+    take: 4,
   });
+
+  // 2. Fill remaining slots up to 4 sources with oldest fetched sources
+  let sources = [...unfetchedSources];
+  if (sources.length < 4) {
+    const fetchedSources = await prisma.source.findMany({
+      where: {
+        isActive: true,
+        id: { notIn: unfetchedSources.map((s) => s.id) },
+      },
+      orderBy: { lastFetchedAt: "asc" },
+      take: 4 - sources.length,
+    });
+    sources = [...sources, ...fetchedSources];
+  }
 
   const results = await Promise.all(
     sources.map(async (source) => {
