@@ -34,15 +34,15 @@ export async function ingestRssFeed(sourceId: string) {
     const parsedArticles = await fetchAndParseRSS(source.feedUrl);
     articlesFound = parsedArticles.length;
 
+    // Limit to latest 8 articles per feed per cycle to ensure fast execution
+    const itemsToProcess = parsedArticles.slice(0, 8);
+
     // 3. Upsert Articles
-    for (const parsed of parsedArticles) {
-      // Create a unique slug (using title + a small hash if needed, or just title)
+    for (const parsed of itemsToProcess) {
       const baseSlug = generateSlug(parsed.title);
-      // To ensure uniqueness and avoid conflicts on same title, append a short hash of the URL
       const urlHash = Buffer.from(parsed.originalUrl).toString("base64").substring(0, 6).toLowerCase().replace(/[^a-z0-9]/g, 'x');
       const uniqueSlug = `${baseSlug}-${urlHash}`;
 
-      // Calculate reading time (avg 200 words per minute)
       const wordCount = parsed.content.split(/\s+/).length;
       const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
@@ -50,7 +50,6 @@ export async function ingestRssFeed(sourceId: string) {
         const article = await prisma.article.upsert({
           where: { originalUrl: parsed.originalUrl },
           update: {
-            // Only update non-destructive fields if it exists
             title: parsed.title,
             excerpt: parsed.excerpt,
             content: parsed.content,
@@ -68,9 +67,8 @@ export async function ingestRssFeed(sourceId: string) {
             sourceId: source.id,
             categoryId: source.categoryId,
             readingTime,
-            // Connect or create tags
             tags: {
-              connectOrCreate: parsed.tags.slice(0, 5).map((tag: any) => ({
+              connectOrCreate: parsed.tags.slice(0, 3).map((tag: any) => ({
                 where: { name: tag },
                 create: { name: tag, slug: generateSlug(tag) },
               })),
@@ -78,8 +76,6 @@ export async function ingestRssFeed(sourceId: string) {
           },
         });
 
-        // If createdAt is basically now, it was just inserted
-        // Note: Prisma doesn't return a boolean for upsert, so we check timestamps.
         const ageInMs = Date.now() - article.createdAt.getTime();
         if (ageInMs < 5000) {
           articlesCreated++;
@@ -124,27 +120,25 @@ export async function ingestRssFeed(sourceId: string) {
 }
 
 /**
- * Convenience function to process all active sources that are due for a fetch.
+ * Convenience function to process active sources due for a fetch.
+ * Processes in parallel & limited batches for fast response within < 10 seconds.
  */
 export async function ingestDueSources() {
   const sources = await prisma.source.findMany({
     where: { isActive: true },
+    orderBy: {
+      lastFetchedAt: "asc", // Pick oldest fetched sources first
+    },
+    take: 3, // Ingest 3 sources per cron cycle for ultra-fast response
   });
 
-  const now = new Date();
-  const results = [];
-
-  for (const source of sources) {
-    const lastFetched = source.lastFetchedAt?.getTime() || 0;
-    const intervalMs = source.fetchInterval * 60 * 1000;
-
-    // Check if it's due
-    if (now.getTime() - lastFetched >= intervalMs) {
+  const results = await Promise.all(
+    sources.map(async (source) => {
       console.log(`Ingesting source: ${source.name} (${source.feedUrl})`);
       const result = await ingestRssFeed(source.id);
-      results.push({ source: source.name, ...result });
-    }
-  }
+      return { source: source.name, ...result };
+    })
+  );
 
   return results;
 }
