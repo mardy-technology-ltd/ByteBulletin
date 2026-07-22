@@ -34,7 +34,10 @@ export function InfiniteArticleFeed({ initialArticles, initialHasMore, excludeHe
               setArticles((prev) => {
                 const existingIds = new Set(prev.map((a) => a.id));
                 const uniqueNew = res.articles.filter((a) => !existingIds.has(a.id));
-                return [...prev, ...uniqueNew];
+                const combined = [...prev, ...uniqueNew];
+                return combined.sort(
+                  (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+                );
               });
               setHasMore(res.hasMore);
               if (res.nextPage) setPage(res.nextPage);

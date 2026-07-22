@@ -6,15 +6,16 @@ export class ArticleRepository {
    */
   static async getFeaturedHero() {
     return prisma.article.findFirst({
-      where: { 
+      where: {
         status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
         imageUrl: { not: null }, // Hero must have an image
       },
       orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
         category: { select: { name: true, slug: true } },
-        seo: { select: { title: true } }
+        seo: { select: { title: true } },
       },
     });
   }
@@ -24,8 +25,9 @@ export class ArticleRepository {
    */
   static async getFeaturedHeroes(limit = 5) {
     return prisma.article.findMany({
-      where: { 
+      where: {
         status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
         imageUrl: { not: null },
       },
       take: limit,
@@ -33,7 +35,7 @@ export class ArticleRepository {
       include: {
         source: { select: { name: true } },
         category: { select: { name: true, slug: true } },
-        seo: { select: { title: true } }
+        seo: { select: { title: true } },
       },
     });
   }
@@ -45,6 +47,7 @@ export class ArticleRepository {
     return prisma.article.findMany({
       where: {
         status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
         ...(excludeId ? { id: { not: excludeId } } : {}),
       },
       take: limit,
@@ -62,10 +65,11 @@ export class ArticleRepository {
    */
   static async getPaginatedLatest(page = 1, limit = 6, excludeId?: string) {
     const skip = (page - 1) * limit;
-    
+
     const articles = await prisma.article.findMany({
       where: {
         status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
         ...(excludeId ? { id: { not: excludeId } } : {}),
       },
       skip,
@@ -95,10 +99,11 @@ export class ArticleRepository {
     return prisma.article.findMany({
       where: {
         status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
         aiSummary: { isNot: null }, // Must be processed by AI
       },
       take: limit,
-      orderBy: { publishedAt: "desc" }, // In a real app, this would order by page views or CTR
+      orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
       },
@@ -110,7 +115,10 @@ export class ArticleRepository {
    */
   static async getBreakingNews(limit = 6) {
     return prisma.article.findMany({
-      where: { status: "PUBLISHED" },
+      where: {
+        status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
+      },
       take: limit,
       orderBy: { publishedAt: "desc" },
       select: {
@@ -130,10 +138,11 @@ export class ArticleRepository {
    */
   static async getByCategory(slug: string, page = 1, limit = 12) {
     const skip = (page - 1) * limit;
-    
+
     return prisma.article.findMany({
       where: {
         status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
         category: { slug },
       },
       skip,
@@ -152,10 +161,11 @@ export class ArticleRepository {
    */
   static async getPaginatedByCategory(slug: string, page = 1, limit = 10, excludeId?: string) {
     const skip = (page - 1) * limit;
-    
+
     const articles = await prisma.article.findMany({
       where: {
         status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
         category: { slug },
         ...(excludeId ? { id: { not: excludeId } } : {}),
       },
@@ -180,45 +190,40 @@ export class ArticleRepository {
   }
 
   /**
-   * Fetches a single article by its slug.
+   * Searches published articles by query term.
    */
-  static async getBySlug(slug: string) {
-    return prisma.article.findUnique({
-      where: { slug },
+  static async search(query: string, limit = 20) {
+    return prisma.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        publishedAt: { lte: new Date() },
+        OR: [
+          { title: { contains: query, mode: "insensitive" } },
+          { excerpt: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      take: limit,
+      orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
-        category: { select: { name: true, slug: true } },
-        aiSummary: true,
-        seo: true,
+        category: { select: { slug: true } },
+        aiSummary: { select: { id: true } },
       },
     });
   }
 
   /**
-   * Searches articles by a query string.
+   * Fetches a single article by slug with detailed relations.
    */
-  static async search(query: string, page = 1, limit = 12) {
-    const skip = (page - 1) * limit;
-    
-    return prisma.article.findMany({
-      where: {
-        status: "PUBLISHED",
-        OR: [
-          { title: { contains: query, mode: "insensitive" } },
-          { excerpt: { contains: query, mode: "insensitive" } },
-          {
-            aiSummary: {
-              summary: { contains: query, mode: "insensitive" }
-            }
-          }
-        ]
-      },
-      skip,
-      take: limit,
-      orderBy: { publishedAt: "desc" },
+  static async getBySlug(slug: string) {
+    return prisma.article.findUnique({
+      where: { slug },
       include: {
-        source: { select: { name: true } },
-        aiSummary: { select: { id: true } },
+        source: true,
+        category: true,
+        tags: true,
+        aiSummary: true,
+        seo: true,
       },
     });
   }

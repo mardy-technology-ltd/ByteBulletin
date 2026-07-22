@@ -2,10 +2,17 @@ import { formatDistanceToNow, format, parseISO, isValid } from "date-fns";
 
 /**
  * Returns a human-readable relative time string (e.g., "3 hours ago").
+ * Clamps future timestamps to 'now' to prevent future-dated RSS feeds from showing 'in X days'.
  */
 export function timeAgo(date: Date | string): string {
-  const d = typeof date === "string" ? parseISO(date) : date;
-  if (!isValid(d)) return "Unknown date";
+  let d = typeof date === "string" ? parseISO(date) : date;
+  if (!isValid(d)) return "Just now";
+
+  const now = new Date();
+  if (d > now) {
+    d = now;
+  }
+
   return formatDistanceToNow(d, { addSuffix: true });
 }
 
