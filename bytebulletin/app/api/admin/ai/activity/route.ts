@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // Fetch the 15 most recently processed AI Summaries directly from DB
+    // Fetch recent 15 AI Summaries directly from DB
     const summaries = await prisma.aISummary.findMany({
       take: 15,
       orderBy: {
@@ -24,11 +24,13 @@ export async function GET() {
       },
     });
 
-    // Get total article stats
-    const totalArticles = await prisma.article.count();
-    const summarizedArticles = await prisma.article.count({
-      where: { aiSummary: { isNot: null } },
-    });
+    // Get live metrics
+    const [totalArticles, summarizedArticles, activeSources, totalUsers] = await Promise.all([
+      prisma.article.count(),
+      prisma.article.count({ where: { aiSummary: { isNot: null } } }),
+      prisma.source.count({ where: { isActive: true } }),
+      prisma.user.count(),
+    ]);
 
     const logs = summaries.map((s) => ({
       id: s.id,
@@ -46,6 +48,8 @@ export async function GET() {
         totalArticles,
         summarizedArticles,
         unsummarizedArticles: totalArticles - summarizedArticles,
+        activeSources,
+        totalUsers,
       },
       summaries: logs,
     });

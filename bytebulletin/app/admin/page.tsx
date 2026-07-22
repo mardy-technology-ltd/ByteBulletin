@@ -1,8 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, FileText, Rss, Users } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 import { formatBdTime } from "@/lib/utils/format-time";
 
+import { DashboardMetrics } from "@/components/admin/dashboard-metrics";
 import { AiProcessingFlow } from "@/components/admin/ai-processing-flow";
 import { RecentAiSummaries } from "@/components/admin/recent-ai-summaries";
 import { RssFetchMonitor } from "@/components/admin/rss-fetch-monitor";
@@ -32,6 +31,13 @@ export default async function AdminDashboardPage() {
     }),
   ]);
 
+  const initialMetrics = {
+    totalArticles,
+    activeSources,
+    totalUsers,
+    aiHealth: "99.8%",
+  };
+
   const initialSummaries = dbSummaries.map((s) => ({
     id: s.id,
     formattedTime: formatBdTime(s.generatedAt),
@@ -51,13 +57,6 @@ export default async function AdminDashboardPage() {
     formattedTime: formatBdTime(l.fetchedAt),
   }));
 
-  const cards = [
-    { title: "Total Articles", value: totalArticles.toLocaleString(), icon: <FileText className="h-4 w-4 text-muted-foreground" /> },
-    { title: "Active Sources", value: activeSources.toString(), icon: <Rss className="h-4 w-4 text-muted-foreground" /> },
-    { title: "Total Users", value: totalUsers.toLocaleString(), icon: <Users className="h-4 w-4 text-muted-foreground" /> },
-    { title: "AI Health", value: "99.8%", icon: <Activity className="h-4 w-4 text-green-500" /> },
-  ];
-
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -65,21 +64,8 @@ export default async function AdminDashboardPage() {
         <p className="text-muted-foreground">Monitor the health and performance of the AI News Aggregator.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {card.title}
-              </CardTitle>
-              {card.icon}
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Real-time Auto-updating Metrics Cards */}
+      <DashboardMetrics initialMetrics={initialMetrics} />
 
       {/* 1. RSS News Fetch Monitor at TOP */}
       <div className="mt-8">
