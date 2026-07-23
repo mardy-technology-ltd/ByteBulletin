@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Flame, TrendingUp, Sparkles, ChevronRight } from "lucide-react";
+import { Flame, TrendingUp, ChevronRight } from "lucide-react";
 import { prisma } from "@/lib/db/prisma";
 
 export async function TrendingWidget() {
-  let trendingArticles: any[] = [];
+  let trendingArticles: Record<string, any>[] = [];
 
   try {
     trendingArticles = await prisma.article.findMany({

@@ -1,6 +1,6 @@
 "use client";
 
-import { Share2, Link as LinkIcon, Bookmark } from "lucide-react";
+import { Share2, Link as LinkIcon } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 import { BookmarkButton } from "./bookmark-button";

@@ -36,26 +36,29 @@ export function LiveSearchModal() {
   // Focus input on open
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    } else {
-      setQuery("");
-      setResults([]);
-      setSelectedIndex(-1);
+      const timer = setTimeout(() => inputRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
+  const handleClose = () => {
+    setIsOpen(false);
+    setQuery("");
+    setResults([]);
+    setSelectedIndex(-1);
+  };
+
   // Debounced search query
   useEffect(() => {
-    if (!query.trim() || query.trim().length < 2) {
-      setResults([]);
-      setIsLoading(false);
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
       return;
     }
 
     setIsLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const data = await searchArticlesAction(query);
+        const data = await searchArticlesAction(trimmed);
         setResults(data);
       } catch (err) {
         console.error("Search error:", err);

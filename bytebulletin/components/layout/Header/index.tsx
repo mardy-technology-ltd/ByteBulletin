@@ -1,11 +1,8 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { mainNav } from "@/config/nav";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/auth/config";
-import { Search } from "lucide-react";
 import { MobileNav } from "./mobile-nav";
 import { DesktopNav } from "./desktop-nav";
 import { prisma } from "@/lib/db/prisma";
