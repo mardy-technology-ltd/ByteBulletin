@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
@@ -29,27 +29,29 @@ export function LoginForm() {
       const res = await loginUser(data);
       if (res?.requiresVerification && res?.email) {
         router.push(`/verify-email?email=${encodeURIComponent(res.email)}&unverified=true`);
+        setIsPending(false);
       } else if (res?.error) {
         setError(res.error);
+        setIsPending(false);
       } else {
-        if (res?.role === "ADMIN") {
-          router.push("/admin");
-        } else {
-          router.push("/");
-        }
-        router.refresh();
+        // Smooth instant navigation to dashboard
+        const redirectUrl = res?.role === "ADMIN" ? "/admin" : "/";
+        window.location.href = redirectUrl;
       }
     } catch (err: any) {
       console.error("Login submission error:", err);
       setError(err?.message || "Invalid email or password");
-    } finally {
       setIsPending(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {error && <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950/50 rounded-md border border-red-200 dark:border-red-800">{error}</div>}
+      {error && (
+        <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-950/50 rounded-md border border-red-200 dark:border-red-800">
+          {error}
+        </div>
+      )}
       
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
@@ -87,7 +89,14 @@ export function LoginForm() {
       </div>
 
       <Button type="submit" className="w-full font-semibold cursor-pointer" disabled={isPending}>
-        {isPending ? "Signing in..." : "Sign in"}
+        {isPending ? (
+          <span className="flex items-center justify-center space-x-2">
+            <Loader2 className="w-4 h-4 animate-spin text-white" />
+            <span>Signing in...</span>
+          </span>
+        ) : (
+          "Sign in"
+        )}
       </Button>
     </form>
   );
