@@ -5,6 +5,8 @@ import { TrendingWidget } from "@/components/common/trending-widget";
 import { getArticleImage } from "@/lib/utils/image";
 import { Flame, Clock } from "lucide-react";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Latest News & Tech Stories | ByteBulletin",
   description: "Browse the most recent, real-time AI-summarized tech, business, and science news from global Tier-1 publishers.",

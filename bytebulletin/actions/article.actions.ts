@@ -31,9 +31,9 @@ export async function fetchMoreArticlesAction(
       slug: article.slug,
       excerpt: article.excerpt,
       imageUrl: getArticleImage(article.imageUrl, article.category?.slug, article.id),
-      sourceName: article.source.name,
+      sourceName: article.source?.name || "ByteBulletin",
       categoryName: article.category?.name || "General",
-      publishedAt: article.publishedAt.toISOString(),
+      publishedAt: article.publishedAt ? new Date(article.publishedAt).toISOString() : new Date().toISOString(),
       isAiSummarized: !!article.aiSummary,
     }));
 
@@ -68,9 +68,9 @@ export async function fetchMoreCategoryArticlesAction(
       slug: article.slug,
       excerpt: article.excerpt,
       imageUrl: getArticleImage(article.imageUrl, article.category?.slug, article.id),
-      sourceName: article.source.name,
+      sourceName: article.source?.name || "ByteBulletin",
       categoryName: article.category?.name || "General",
-      publishedAt: article.publishedAt.toISOString(),
+      publishedAt: article.publishedAt ? new Date(article.publishedAt).toISOString() : new Date().toISOString(),
       isAiSummarized: !!article.aiSummary,
     }));
 

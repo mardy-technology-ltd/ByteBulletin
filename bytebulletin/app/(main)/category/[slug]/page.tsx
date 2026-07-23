@@ -11,6 +11,9 @@ interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
+// ISR: Revalidate category page every 60 seconds
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
   const categoryName = slug.charAt(0).toUpperCase() + slug.slice(1);
