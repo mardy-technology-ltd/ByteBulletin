@@ -29,7 +29,7 @@ export function InfiniteCategoryFeed({
 
     setIsLoading(true);
     try {
-      const res = await fetchMoreCategoryArticlesAction(categorySlug, page, 8, excludeHeroId);
+      const res = await fetchMoreCategoryArticlesAction(categorySlug, page, 8, excludeHeroId, articles.length);
       if (res.articles.length > 0) {
         setArticles((prev) => {
           const existingIds = new Set(prev.map((a) => a.id));

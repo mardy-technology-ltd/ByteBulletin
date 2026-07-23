@@ -63,8 +63,8 @@ export class ArticleRepository {
   /**
    * Fetches paginated latest articles for infinite scroll.
    */
-  static async getPaginatedLatest(page = 1, limit = 6, excludeId?: string) {
-    const skip = (page - 1) * limit;
+  static async getPaginatedLatest(page = 1, limit = 6, excludeId?: string, skipCount?: number) {
+    const skip = typeof skipCount === "number" ? skipCount : (page - 1) * limit;
 
     const articles = await prisma.article.findMany({
       where: {
@@ -159,8 +159,8 @@ export class ArticleRepository {
   /**
    * Fetches paginated articles by category for infinite scroll.
    */
-  static async getPaginatedByCategory(slug: string, page = 1, limit = 10, excludeId?: string) {
-    const skip = (page - 1) * limit;
+  static async getPaginatedByCategory(slug: string, page = 1, limit = 10, excludeId?: string, skipCount?: number) {
+    const skip = typeof skipCount === "number" ? skipCount : (page - 1) * limit;
 
     const articles = await prisma.article.findMany({
       where: {

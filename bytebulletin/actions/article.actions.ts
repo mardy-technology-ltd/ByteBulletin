@@ -19,10 +19,11 @@ export interface FeedArticleItem {
 export async function fetchMoreArticlesAction(
   page: number,
   limit = 6,
-  excludeId?: string
+  excludeId?: string,
+  skipCount?: number
 ): Promise<{ articles: FeedArticleItem[]; hasMore: boolean; nextPage: number | null }> {
   try {
-    const result = await ArticleRepository.getPaginatedLatest(page, limit, excludeId);
+    const result = await ArticleRepository.getPaginatedLatest(page, limit, excludeId, skipCount);
 
     const formattedArticles: FeedArticleItem[] = result.articles.map((article: any) => ({
       id: article.id,
@@ -55,10 +56,11 @@ export async function fetchMoreCategoryArticlesAction(
   categorySlug: string,
   page: number,
   limit = 10,
-  excludeId?: string
+  excludeId?: string,
+  skipCount?: number
 ): Promise<{ articles: FeedArticleItem[]; hasMore: boolean; nextPage: number | null }> {
   try {
-    const result = await ArticleRepository.getPaginatedByCategory(categorySlug, page, limit, excludeId);
+    const result = await ArticleRepository.getPaginatedByCategory(categorySlug, page, limit, excludeId, skipCount);
 
     const formattedArticles: FeedArticleItem[] = result.articles.map((article: any) => ({
       id: article.id,
