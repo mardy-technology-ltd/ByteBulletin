@@ -1,6 +1,4 @@
 import { prisma } from "@/lib/db/prisma";
-import { Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { 
   Table, 
   TableBody, 
@@ -9,8 +7,8 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { deleteArticle } from "@/actions/admin.actions";
 import { formatDistanceToNow } from "date-fns";
+import { ArticleDeleteButton } from "./article-delete-button";
 
 export const metadata = {
   title: "Articles Management - Admin",
@@ -19,13 +17,18 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminArticlesPage() {
-  const articles = await prisma.article.findMany({
-    include: {
-      source: { select: { name: true } },
-    },
-    orderBy: { publishedAt: "desc" },
-    take: 100, // Limit to recent 100 for performance
-  });
+  let articles: any[] = [];
+  try {
+    articles = await prisma.article.findMany({
+      include: {
+        source: { select: { name: true } },
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 100, // Limit to recent 100 for performance
+    });
+  } catch (err) {
+    console.error("AdminArticlesPage Error:", err);
+  }
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -52,29 +55,29 @@ export default async function AdminArticlesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              articles.map((article) => (
-                <TableRow key={article.id}>
-                  <TableCell className="font-medium max-w-[400px] truncate">
-                    <a href={`/news/${article.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                      {article.title}
-                    </a>
-                  </TableCell>
-                  <TableCell>{article.source.name}</TableCell>
-                  <TableCell suppressHydrationWarning>
-                    {formatDistanceToNow(article.publishedAt, { addSuffix: true })}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <form className="inline-block" action={async () => {
-                      "use server";
-                      await deleteArticle(article.id);
-                    }}>
-                      <Button type="submit" variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-500/10" title="Delete">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </form>
-                  </TableCell>
-                </TableRow>
-              ))
+              articles.map((article) => {
+                let publishedStr = "Recently";
+                try {
+                  if (article.publishedAt) {
+                    publishedStr = formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true });
+                  }
+                } catch (e) {}
+
+                return (
+                  <TableRow key={article.id}>
+                    <TableCell className="font-medium max-w-[400px] truncate">
+                      <a href={`/news/${article.slug}`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                        {article.title}
+                      </a>
+                    </TableCell>
+                    <TableCell>{article.source?.name || "Unknown"}</TableCell>
+                    <TableCell suppressHydrationWarning>{publishedStr}</TableCell>
+                    <TableCell className="text-right">
+                      <ArticleDeleteButton articleId={article.id} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

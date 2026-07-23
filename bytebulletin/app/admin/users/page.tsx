@@ -20,13 +20,20 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
-  const session = await auth();
+  let session = null;
+  let users: any[] = [];
+
+  try {
+    session = await auth();
+    users = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("[AdminUsersPage Error]:", error);
+  }
+
   const currentUserId = session?.user?.id;
   const currentUserEmail = session?.user?.email;
-
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-  });
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -60,45 +67,54 @@ export default async function AdminUsersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    {user.name || "Anonymous User"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                  <TableCell>
-                    {user.emailVerified ? (
-                      <span className="inline-flex items-center space-x-1.5 text-xs text-emerald-400 font-medium">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Verified</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center space-x-1.5 text-xs text-amber-400 font-medium">
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        <span>Pending</span>
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.role === "ADMIN" ? (
-                      <Badge className="bg-violet-600 text-white font-semibold">Admin</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-muted-foreground">User</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-xs" suppressHydrationWarning>
-                    {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <UserTableActions
-                      userId={user.id}
-                      userName={user.name || user.email}
-                      userEmail={user.email}
-                      isCurrentUser={Boolean(currentUserId && user.id === currentUserId) || Boolean(currentUserEmail && user.email === currentUserEmail)}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+              users.map((user) => {
+                let joinedStr = "Recently";
+                try {
+                  if (user.createdAt) {
+                    joinedStr = formatDistanceToNow(new Date(user.createdAt), { addSuffix: true });
+                  }
+                } catch (e) {}
+
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.name || "Anonymous User"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                    <TableCell>
+                      {user.emailVerified ? (
+                        <span className="inline-flex items-center space-x-1.5 text-xs text-emerald-400 font-medium">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Verified</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center space-x-1.5 text-xs text-amber-400 font-medium">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>Pending</span>
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.role === "ADMIN" ? (
+                        <Badge className="bg-violet-600 text-white font-semibold">Admin</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-muted-foreground">User</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs" suppressHydrationWarning>
+                      {joinedStr}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <UserTableActions
+                        userId={user.id}
+                        userName={user.name || user.email}
+                        userEmail={user.email}
+                        isCurrentUser={Boolean(currentUserId && user.id === currentUserId) || Boolean(currentUserEmail && user.email === currentUserEmail)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
