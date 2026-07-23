@@ -25,3 +25,15 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => React.createElement("img", { ...props, alt: (props.alt as string) || "" }),
 }));
+
+// Mock next-auth
+vi.mock("next-auth", () => ({
+  default: vi.fn(() => ({
+    handlers: { GET: vi.fn(), POST: vi.fn() },
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    auth: vi.fn(),
+  })),
+  AuthError: class AuthError extends Error {},
+}));
+

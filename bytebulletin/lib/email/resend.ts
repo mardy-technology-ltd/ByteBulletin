@@ -1,6 +1,12 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+  return new Resend(apiKey);
+}
 
 export async function sendVerificationEmail(
   email: string,
@@ -65,6 +71,12 @@ export async function sendVerificationEmail(
 
   try {
     console.log(`\n=========================================\n[VERIFICATION OTP GENERATED]\nTO: ${email}\nOTP CODE: ${otp}\nVERIFY LINK: ${verifyUrl}\n=========================================\n`);
+
+    const resend = getResendClient();
+    if (!resend) {
+      console.warn("[Resend Warning]: Skipping email delivery because RESEND_API_KEY is missing.");
+      return { success: true, data: { id: "mock-id-no-resend-key" } };
+    }
 
     const data = await resend.emails.send({
       from: "ByteBulletin <onboarding@resend.dev>",
@@ -136,6 +148,12 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 
   try {
     console.log(`\n=========================================\n[PASSWORD RESET LINK GENERATED]\nTO: ${email}\nRESET LINK: ${resetUrl}\n=========================================\n`);
+
+    const resend = getResendClient();
+    if (!resend) {
+      console.warn("[Resend Warning]: Skipping email delivery because RESEND_API_KEY is missing.");
+      return { success: true, data: { id: "mock-id-no-resend-key" } };
+    }
 
     const data = await resend.emails.send({
       from: "ByteBulletin <onboarding@resend.dev>",

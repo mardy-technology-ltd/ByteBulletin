@@ -8,6 +8,8 @@ import type { UserRole } from "@/types/user";
 // ─────────────────────────────────────────────────────────────
 
 export const edgeAuthConfig: NextAuthConfig = {
+  trustHost: true,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "default_auth_secret_for_bytebulletin_key",
   providers: [], // Providers are loaded in the Node environment (config.ts)
   session: { strategy: "jwt" },
   pages: {
