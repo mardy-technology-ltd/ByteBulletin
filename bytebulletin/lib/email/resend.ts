@@ -79,7 +79,7 @@ export async function sendVerificationEmail(
     }
 
     const data = await resend.emails.send({
-      from: "ByteBulletin <onboarding@resend.dev>",
+      from: "ByteBulletin <auth@thebytebulletin.com>",
       to: [email],
       subject: `Verify your ByteBulletin Account - OTP: ${otp}`,
       html: htmlContent,
@@ -156,7 +156,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     }
 
     const data = await resend.emails.send({
-      from: "ByteBulletin <onboarding@resend.dev>",
+      from: "ByteBulletin <auth@thebytebulletin.com>",
       to: [email],
       subject: "Reset your ByteBulletin Password",
       html: htmlContent,
