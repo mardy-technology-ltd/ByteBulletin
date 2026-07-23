@@ -16,6 +16,8 @@ import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { auth } from "@/lib/auth/config";
 import { redirect } from "next/navigation";
 
+import { AdminSignOutButton } from "./admin-sign-out-button";
+
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth();
   
@@ -60,9 +62,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </div>
         <div className="mt-auto p-4 border-t flex items-center justify-between">
           <ThemeToggle />
-          <Link href="/api/auth/signout" className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
-            <LogOut className="w-5 h-5" />
-          </Link>
+          <AdminSignOutButton />
         </div>
       </aside>
 
