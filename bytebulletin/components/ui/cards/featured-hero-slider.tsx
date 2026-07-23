@@ -103,6 +103,7 @@ export function FeaturedHeroSlider({
           src={current.imageUrl}
           alt={current.title}
           fill
+          sizes="100vw"
           className="absolute inset-0 object-cover transition-all duration-700 group-hover:scale-105 animate-in fade-in zoom-in-95 duration-500"
           priority
         />

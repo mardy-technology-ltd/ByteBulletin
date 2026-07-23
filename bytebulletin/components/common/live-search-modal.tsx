@@ -154,6 +154,7 @@ export function LiveSearchModal() {
                         src={item.imageUrl}
                         alt={item.title}
                         fill
+                        sizes="64px"
                         className="object-cover"
                       />
                     </div>

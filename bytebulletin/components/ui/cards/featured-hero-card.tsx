@@ -30,6 +30,7 @@ export function FeaturedHeroCard({
           src={imageUrl}
           alt={title}
           fill
+          sizes="100vw"
           className="absolute inset-0 object-cover transition-transform duration-700 group-hover:scale-105"
           priority
         />

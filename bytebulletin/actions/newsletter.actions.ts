@@ -8,6 +8,15 @@ const emailSchema = z.string().email("Invalid email address");
 export async function subscribeToNewsletter(formData: FormData) {
   try {
     const email = formData.get("email") as string;
+    return await subscribeEmailDirectly(email);
+  } catch (error) {
+    console.error("Newsletter Subscription Error:", error);
+    return { success: false, error: "Failed to subscribe. Please try again." };
+  }
+}
+
+export async function subscribeEmailDirectly(email: string) {
+  try {
     const parsed = emailSchema.safeParse(email);
 
     if (!parsed.success) {
@@ -23,7 +32,19 @@ export async function subscribeToNewsletter(formData: FormData) {
 
     return { success: true, message: "Successfully subscribed!" };
   } catch (error) {
-    console.error("Newsletter Subscription Error:", error);
+    console.error("Newsletter Direct Subscription Error:", error);
     return { success: false, error: "Failed to subscribe. Please try again." };
+  }
+}
+
+export async function getNewsletterSubscribersAction() {
+  try {
+    const subscribers = await prisma.newsletterSubscriber.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return { success: true, subscribers };
+  } catch (error) {
+    console.error("Get Newsletter Subscribers Error:", error);
+    return { success: false, subscribers: [] };
   }
 }

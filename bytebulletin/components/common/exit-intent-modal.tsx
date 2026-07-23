@@ -5,11 +5,14 @@ import { Sparkles, X, Mail, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { subscribeEmailDirectly } from "@/actions/newsletter.actions";
+
 export function ExitIntentModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const hasSeenModal = localStorage.getItem("bytebulletin_exit_modal_dismissed");
@@ -28,16 +31,25 @@ export function ExitIntentModal() {
     return () => document.removeEventListener("mouseleave", handleMouseLeave);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
     setIsPending(true);
-    setTimeout(() => {
-      setIsSubmitted(true);
+    setError(null);
+    try {
+      const res = await subscribeEmailDirectly(email);
+      if (res.success) {
+        setIsSubmitted(true);
+        setTimeout(() => setIsOpen(false), 2500);
+      } else {
+        setError(res.error || "Failed to subscribe");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    } finally {
       setIsPending(false);
-      setTimeout(() => setIsOpen(false), 2500);
-    }, 600);
+    }
   };
 
   if (!isOpen) return null;
@@ -72,6 +84,12 @@ export function ExitIntentModal() {
               Get our daily executive AI digest covering high-impact tech, enterprise cloud & AI updates in your inbox.
             </p>
           </div>
+
+          {error && (
+            <div className="p-3 text-xs text-red-400 bg-red-950/60 border border-red-500/30 rounded-xl">
+              {error}
+            </div>
+          )}
 
           {isSubmitted ? (
             <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center space-x-2 animate-in zoom-in-95">
