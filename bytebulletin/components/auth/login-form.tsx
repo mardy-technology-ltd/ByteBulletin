@@ -39,8 +39,9 @@ export function LoginForm() {
         }
         router.refresh();
       }
-    } catch (err) {
-      setError("Something went wrong");
+    } catch (err: any) {
+      console.error("Login submission error:", err);
+      setError(err?.message || "Invalid email or password");
     } finally {
       setIsPending(false);
     }

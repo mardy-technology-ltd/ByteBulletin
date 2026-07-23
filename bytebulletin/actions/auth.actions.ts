@@ -26,10 +26,15 @@ export async function loginUser(data: LoginInput) {
 
     const user = await prisma.user.findUnique({
       where: { email: parsed.data.email },
-      select: { id: true, role: true, emailVerified: true, name: true }
+      select: { id: true, role: true, emailVerified: true, name: true, password: true }
     });
 
-    if (!user) {
+    if (!user || !user.password) {
+      return { success: false, error: "Invalid email or password" };
+    }
+
+    const isPasswordValid = await bcrypt.compare(parsed.data.password, user.password);
+    if (!isPasswordValid) {
       return { success: false, error: "Invalid email or password" };
     }
 
@@ -47,23 +52,28 @@ export async function loginUser(data: LoginInput) {
       };
     }
 
-    await signIn("credentials", {
-      email: parsed.data.email,
-      password: parsed.data.password,
-      redirect: false,
-    });
-
-    return { success: true, role: user.role || "USER" };
-  } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return { success: false, error: "Invalid email or password" };
-        default:
-          return { success: false, error: "An error occurred during sign in" };
+    try {
+      await signIn("credentials", {
+        email: parsed.data.email,
+        password: parsed.data.password,
+        redirect: false,
+      });
+    } catch (authError: any) {
+      if (authError?.message?.includes("NEXT_REDIRECT") || authError?.digest?.includes("NEXT_REDIRECT")) {
+        return { success: true, role: user.role || "USER" };
+      }
+      if (authError instanceof AuthError) {
+        return { success: false, error: "Invalid email or password" };
       }
     }
-    throw error; // Rethrow Next.js redirects
+
+    return { success: true, role: user.role || "USER" };
+  } catch (error: any) {
+    if (error?.message?.includes("NEXT_REDIRECT") || error?.digest?.includes("NEXT_REDIRECT")) {
+      throw error;
+    }
+    console.error("[loginUser Exception]:", error);
+    return { success: false, error: error?.message || "Failed to sign in. Please try again." };
   }
 }
 
