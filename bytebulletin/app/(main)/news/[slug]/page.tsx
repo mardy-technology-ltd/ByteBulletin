@@ -2,6 +2,8 @@ import { AISummarySnippet } from "@/components/common/ai-summary-snippet";
 import { ShareBar } from "@/components/common/share-bar";
 import { ProgressBar } from "@/components/common/progress-bar";
 import { FormattedArticleBody } from "@/components/article/formatted-article-body";
+import { AffiliateBannerCard } from "@/components/article/affiliate-banner-card";
+import { TrendingWidget } from "@/components/common/trending-widget";
 import { Metadata } from "next";
 import { ArticleRepository } from "@/repositories/article.repository";
 import { notFound } from "next/navigation";
@@ -21,7 +23,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = article.seo?.title || article.title;
   const description = article.seo?.description || article.excerpt;
-  const url = `https://bytebulletin.com/news/${slug}`;
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bytebulletin.com";
+  const url = `${siteUrl}/news/${slug}`;
   const keywords = article.seo?.keywords?.join(", ") || "";
 
   return {
@@ -92,19 +95,66 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
     console.error("Comments fetch error:", err);
   }
 
-  // JSON-LD Structured Data for Google News
+  // Enriched Multi-Schema JSON-LD Structured Data for Google News, Discover & AI Overviews
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bytebulletin.com";
+  const canonicalUrl = `${siteUrl}/news/${slug}`;
+
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    "headline": article.seo?.title || article.title,
-    "image": article.imageUrl ? [article.imageUrl] : [],
-    "datePublished": article.publishedAt.toISOString(),
-    "dateModified": article.updatedAt.toISOString(),
-    "author": [{
-      "@type": "Organization",
-      "name": article.source.name,
-      "url": "https://bytebulletin.com"
-    }]
+    "@graph": [
+      {
+        "@type": "NewsArticle",
+        "@id": `${canonicalUrl}#article`,
+        "isPartOf": {
+          "@type": "WebPage",
+          "@id": canonicalUrl,
+          "url": canonicalUrl,
+          "name": article.seo?.title || article.title
+        },
+        "headline": article.seo?.title || article.title,
+        "description": article.seo?.description || article.excerpt,
+        "image": article.imageUrl ? [article.imageUrl] : [`${siteUrl}/og-image.png`],
+        "datePublished": article.publishedAt.toISOString(),
+        "dateModified": article.updatedAt.toISOString(),
+        "mainEntityOfPage": canonicalUrl,
+        "author": {
+          "@type": "Organization",
+          "name": article.source.name,
+          "url": article.originalUrl || canonicalUrl
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "ByteBulletin",
+          "url": siteUrl,
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${siteUrl}/logo.png`
+          }
+        },
+        "speakable": {
+          "@type": "SpeakableSpecification",
+          "cssSelector": ["h1", ".ai-summary-text"]
+        }
+      },
+      ...(article.aiSummary?.keyPoints && article.aiSummary.keyPoints.length > 0
+        ? [
+            {
+              "@type": "FAQPage",
+              "@id": `${canonicalUrl}#faq`,
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": `What are the key takeaways from "${article.title}"?`,
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": article.aiSummary.keyPoints.join(" ")
+                  }
+                }
+              ]
+            }
+          ]
+        : [])
+    ]
   };
 
   return (
@@ -162,6 +212,9 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
           originalUrl={article.originalUrl}
         />
 
+        {/* High-CPC Partner Offer Card */}
+        <AffiliateBannerCard categorySlug={article.category?.slug} />
+
         <ShareBar 
           url={`https://bytebulletin.com/news/${slug}`} 
           title={article.title} 
@@ -184,6 +237,11 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
           initialComments={comments}
           currentUser={session?.user}
         />
+
+        {/* Trending Stories Widget */}
+        <div className="mt-12">
+          <TrendingWidget />
+        </div>
       </article>
     </>
   );

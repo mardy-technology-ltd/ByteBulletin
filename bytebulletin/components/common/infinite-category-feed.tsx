@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { ArticleListItem } from "@/components/ui/cards/article-list-item";
 import { fetchMoreCategoryArticlesAction, FeedArticleItem } from "@/actions/article.actions";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, CheckCircle2, ChevronDown } from "lucide-react";
 
 interface InfiniteCategoryFeedProps {
   categorySlug: string;
@@ -22,53 +23,36 @@ export function InfiniteCategoryFeed({
   const [page, setPage] = useState(2); // Page 1 was rendered on server
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoading, setIsLoading] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const fetchingRef = useRef(false);
 
-  useEffect(() => {
-    if (!sentinelRef.current || !hasMore) return;
+  const handleLoadMore = async () => {
+    if (isLoading || !hasMore) return;
 
-    const observer = new IntersectionObserver(
-      async (entries) => {
-        const first = entries[0];
-        if (first.isIntersecting && hasMore && !fetchingRef.current) {
-          fetchingRef.current = true;
-          setIsLoading(true);
-          try {
-            const res = await fetchMoreCategoryArticlesAction(categorySlug, page, 8, excludeHeroId);
-            if (res.articles.length > 0) {
-              setArticles((prev) => {
-                const existingIds = new Set(prev.map((a) => a.id));
-                const uniqueNew = res.articles.filter((a) => !existingIds.has(a.id));
-                const combined = [...prev, ...uniqueNew];
-                return combined.sort(
-                  (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-                );
-              });
-              setHasMore(res.hasMore);
-              if (res.nextPage) setPage(res.nextPage);
-            } else {
-              setHasMore(false);
-            }
-          } catch (error) {
-            console.error("Failed to load more category articles", error);
-            setHasMore(false);
-          } finally {
-            setIsLoading(false);
-            fetchingRef.current = false;
-          }
-        }
-      },
-      { threshold: 0.1, rootMargin: "200px" }
-    );
+    setIsLoading(true);
+    try {
+      const res = await fetchMoreCategoryArticlesAction(categorySlug, page, 8, excludeHeroId);
+      if (res.articles.length > 0) {
+        setArticles((prev) => {
+          const existingIds = new Set(prev.map((a) => a.id));
+          const uniqueNew = res.articles.filter((a) => !existingIds.has(a.id));
+          const combined = [...prev, ...uniqueNew];
+          return combined.sort(
+            (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+          );
+        });
+        setHasMore(res.hasMore);
+        if (res.nextPage) setPage(res.nextPage);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Failed to load more category articles", error);
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const currentSentinel = sentinelRef.current;
-    observer.observe(currentSentinel);
-
-    return () => {
-      if (currentSentinel) observer.unobserve(currentSentinel);
-    };
-  }, [categorySlug, page, hasMore, excludeHeroId]);
+  const categoryTitle = categorySlug.replace("-", " ");
 
   return (
     <div className="flex flex-col space-y-2">
@@ -88,19 +72,32 @@ export function InfiniteCategoryFeed({
         ))}
       </div>
 
-      {/* Sentinel & Loading indicator */}
-      <div ref={sentinelRef} className="py-8 flex items-center justify-center">
-        {isLoading && (
-          <div className="flex items-center space-x-2 text-primary font-medium text-sm animate-pulse bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-            <span>Loading more stories in {categorySlug.replace("-", " ")}...</span>
-          </div>
+      {/* Manual Load More Button & Footer Access */}
+      <div className="py-10 flex items-center justify-center">
+        {hasMore && (
+          <Button
+            onClick={handleLoadMore}
+            disabled={isLoading}
+            className="px-8 py-3 h-12 rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-violet-600 dark:hover:bg-violet-600 text-white font-bold text-sm border border-violet-500/30 shadow-lg shadow-violet-950/20 cursor-pointer transition-all active:scale-95 group capitalize"
+          >
+            {isLoading ? (
+              <span className="flex items-center space-x-2">
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                <span>Loading more {categoryTitle} stories...</span>
+              </span>
+            ) : (
+              <span className="flex items-center space-x-2">
+                <span>Load More {categoryTitle} Stories</span>
+                <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+              </span>
+            )}
+          </Button>
         )}
 
         {!hasMore && articles.length > 0 && (
-          <div className="flex items-center space-x-2 text-muted-foreground text-xs py-4">
+          <div className="flex items-center space-x-2 text-muted-foreground text-xs py-4 capitalize">
             <CheckCircle2 className="w-4 h-4 text-violet-500" />
-            <span>You&apos;re all caught up with {categorySlug.replace("-", " ")} stories.</span>
+            <span>You&apos;re all caught up with {categoryTitle} stories.</span>
           </div>
         )}
       </div>

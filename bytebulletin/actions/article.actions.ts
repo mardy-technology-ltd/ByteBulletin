@@ -2,6 +2,7 @@
 
 import { ArticleRepository } from "@/repositories/article.repository";
 import { getArticleImage } from "@/lib/utils/image";
+import { prisma } from "@/lib/db/prisma";
 
 export interface FeedArticleItem {
   id: string;
@@ -10,6 +11,7 @@ export interface FeedArticleItem {
   excerpt: string | null;
   imageUrl: string;
   sourceName: string;
+  categoryName?: string;
   publishedAt: string;
   isAiSummarized: boolean;
 }
@@ -29,6 +31,7 @@ export async function fetchMoreArticlesAction(
       excerpt: article.excerpt,
       imageUrl: getArticleImage(article.imageUrl, article.category?.slug, article.id),
       sourceName: article.source.name,
+      categoryName: article.category?.name || "General",
       publishedAt: article.publishedAt.toISOString(),
       isAiSummarized: !!article.aiSummary,
     }));
@@ -62,8 +65,9 @@ export async function fetchMoreCategoryArticlesAction(
       title: article.title,
       slug: article.slug,
       excerpt: article.excerpt,
-      imageUrl: getArticleImage(article.imageUrl, categorySlug, article.id),
+      imageUrl: getArticleImage(article.imageUrl, article.category?.slug, article.id),
       sourceName: article.source.name,
+      categoryName: article.category?.name || "General",
       publishedAt: article.publishedAt.toISOString(),
       isAiSummarized: !!article.aiSummary,
     }));
@@ -80,5 +84,42 @@ export async function fetchMoreCategoryArticlesAction(
       hasMore: false,
       nextPage: null,
     };
+  }
+}
+
+/**
+ * Real-time instant search action for Live Search Modal
+ */
+export async function searchArticlesAction(query: string): Promise<FeedArticleItem[]> {
+  if (!query || query.trim().length < 2) return [];
+
+  try {
+    const articles = await prisma.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        OR: [
+          { title: { contains: query.trim(), mode: "insensitive" } },
+          { excerpt: { contains: query.trim(), mode: "insensitive" } },
+        ],
+      },
+      take: 6,
+      orderBy: { publishedAt: "desc" },
+      include: { source: true, category: true, aiSummary: true },
+    });
+
+    return articles.map((article: any) => ({
+      id: article.id,
+      title: article.title,
+      slug: article.slug,
+      excerpt: article.excerpt,
+      imageUrl: getArticleImage(article.imageUrl, article.category?.slug, article.id),
+      sourceName: article.source.name,
+      categoryName: article.category?.name || "General",
+      publishedAt: article.publishedAt.toISOString(),
+      isAiSummarized: !!article.aiSummary,
+    }));
+  } catch (error) {
+    console.error("[searchArticlesAction Error]:", error);
+    return [];
   }
 }

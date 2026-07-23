@@ -10,6 +10,7 @@ import { MobileNav } from "./mobile-nav";
 import { DesktopNav } from "./desktop-nav";
 import { prisma } from "@/lib/db/prisma";
 import { UserNav } from "./user-nav";
+import { LiveSearchModal } from "@/components/common/live-search-modal";
 
 export async function Header() {
   const session = await auth();
@@ -44,15 +45,7 @@ export async function Header() {
         
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
-            <form action="/search" className="hidden lg:flex items-center relative mr-2">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                name="q"
-                type="search"
-                placeholder="Search articles..."
-                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[300px]"
-              />
-            </form>
+            <LiveSearchModal />
             <div className="hidden md:flex items-center gap-2">
               {user ? (
                 <UserNav user={user} />
