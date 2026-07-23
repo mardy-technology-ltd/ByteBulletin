@@ -8,6 +8,28 @@ function getResendClient(): Resend | null {
   return new Resend(apiKey);
 }
 
+async function safeSendResendEmail(
+  resend: Resend, 
+  emailPayload: { to: string[]; subject: string; html: string }
+) {
+  // Primary attempt using custom official domain email
+  let data = await resend.emails.send({
+    from: "ByteBulletin <auth@mail.thebytebulletin.com>",
+    ...emailPayload,
+  });
+
+  // Automatic fallback if custom domain verification is still pending on Resend
+  if (data.error && (data.error.message?.includes("not verified") || data.error.name === "validation_error")) {
+    console.warn("[Resend Domain Verification Pending]: Retrying delivery via fallback sender...");
+    data = await resend.emails.send({
+      from: "ByteBulletin <onboarding@resend.dev>",
+      ...emailPayload,
+    });
+  }
+
+  return data;
+}
+
 export async function sendVerificationEmail(
   email: string,
   name: string | null | undefined,
@@ -78,15 +100,14 @@ export async function sendVerificationEmail(
       return { success: true, data: { id: "mock-id-no-resend-key" } };
     }
 
-    const data = await resend.emails.send({
-      from: "ByteBulletin <auth@thebytebulletin.com>",
+    const data = await safeSendResendEmail(resend, {
       to: [email],
       subject: `Verify your ByteBulletin Account - OTP: ${otp}`,
       html: htmlContent,
     });
 
     if (data.error) {
-      console.warn("[Resend API Test Mode Warning]:", data.error.message || data.error);
+      console.warn("[Resend API Error]:", data.error.message || data.error);
     } else {
       console.log("[Resend Email Sent Successfully]:", data.data?.id);
     }
@@ -155,15 +176,14 @@ export async function sendPasswordResetEmail(email: string, token: string) {
       return { success: true, data: { id: "mock-id-no-resend-key" } };
     }
 
-    const data = await resend.emails.send({
-      from: "ByteBulletin <auth@thebytebulletin.com>",
+    const data = await safeSendResendEmail(resend, {
       to: [email],
       subject: "Reset your ByteBulletin Password",
       html: htmlContent,
     });
 
     if (data.error) {
-      console.warn("[Resend API Test Mode Warning]:", data.error.message || data.error);
+      console.warn("[Resend Password Reset Error]:", data.error.message || data.error);
     } else {
       console.log("[Password Reset Email Sent Successfully]:", data.data?.id);
     }
