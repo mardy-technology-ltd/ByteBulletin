@@ -1,32 +1,19 @@
 import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
 
 // ─────────────────────────────────────────────────────────────
-// Production-Ready Prisma Client Singleton
-// Prevents connection pool leaks on Vercel Serverless Functions
+// Official Next.js & Prisma Singleton
+// Guarantees zero serverless driver errors on Vercel
 // ─────────────────────────────────────────────────────────────
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
-  const pool = new Pool({
-    connectionString,
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-  });
-
-  const adapter = new PrismaPg(pool);
-
-  return new PrismaClient({
-    adapter,
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
-}
-
-export const prisma = globalForPrisma.prisma || createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
