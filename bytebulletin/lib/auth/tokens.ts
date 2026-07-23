@@ -2,9 +2,13 @@ import { prisma } from "@/lib/db/prisma";
 
 /**
  * Generates a 6-digit numeric OTP and a unique UUID token stored in VerificationToken table.
- * Token expires in 1 hour.
+ * Embeds pending user registration details (name & hashedPassword) so user table is only populated upon verification.
  */
-export async function generateVerificationToken(email: string) {
+export async function generateVerificationToken(
+  email: string,
+  name?: string | null,
+  hashedPassword?: string | null
+) {
   // Generate a random 6-digit OTP (e.g. 849201)
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   
@@ -18,9 +22,10 @@ export async function generateVerificationToken(email: string) {
     where: { identifier: email },
   });
 
-  // Store token with OTP embedded in identifier or identifier = email, token = token:otp
-  // We format token as `${token}:${otp}` so we can verify either 1-click link or 6-digit OTP
-  const combinedToken = `${token}:${otp}`;
+  // Format token as `${token}:${otp}:${encodedName}:${hashedPassword}`
+  const encodedName = name ? encodeURIComponent(name) : "";
+  const pwd = hashedPassword || "";
+  const combinedToken = `${token}:${otp}:${encodedName}:${pwd}`;
 
   const verificationToken = await prisma.verificationToken.create({
     data: {
@@ -39,7 +44,7 @@ export async function generateVerificationToken(email: string) {
 }
 
 /**
- * Validates an OTP or Token for an email.
+ * Validates an OTP or Token for an email and returns embedded pending user data if valid.
  */
 export async function validateVerificationToken(email: string, codeOrToken: string) {
   const existingTokens = await prisma.verificationToken.findMany({
@@ -58,8 +63,8 @@ export async function validateVerificationToken(email: string, codeOrToken: stri
     return { valid: false, error: "Verification code has expired. Please request a new one." };
   }
 
-  // Token is stored as `${token}:${otp}`
-  const [storedToken, storedOtp] = tokenRecord.token.split(":");
+  // Token format: `${token}:${otp}:${encodedName}:${hashedPassword}`
+  const [storedToken, storedOtp, encodedName, storedHashedPassword] = tokenRecord.token.split(":");
 
   const isMatch = codeOrToken === storedOtp || codeOrToken === storedToken;
 
@@ -67,10 +72,18 @@ export async function validateVerificationToken(email: string, codeOrToken: stri
     return { valid: false, error: "Invalid verification code" };
   }
 
+  const name = encodedName ? decodeURIComponent(encodedName) : null;
+  const hashedPassword = storedHashedPassword || null;
+
   // Delete token after successful match
   await prisma.verificationToken.delete({ where: { token: tokenRecord.token } });
 
-  return { valid: true };
+  return {
+    valid: true,
+    email,
+    name,
+    hashedPassword,
+  };
 }
 
 /**

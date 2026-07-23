@@ -95,3 +95,34 @@ export async function deleteArticle(id: string) {
     return { success: false, error: "Failed to delete article" };
   }
 }
+
+export async function deleteUserAction(userId: string) {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN") {
+    return { success: false, error: "Unauthorized: Admin access required" };
+  }
+
+  if (session.user.id === userId) {
+    return { success: false, error: "You cannot delete your own admin account" };
+  }
+
+  try {
+    // Delete cascading user relations
+    await prisma.bookmark.deleteMany({ where: { userId } });
+    await prisma.articleReaction.deleteMany({ where: { userId } });
+    await prisma.comment.deleteMany({ where: { userId } });
+    await prisma.userPreference.deleteMany({ where: { userId } });
+    await prisma.account.deleteMany({ where: { userId } });
+    await prisma.session.deleteMany({ where: { userId } });
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    revalidatePath("/admin/users");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to delete user:", error);
+    return { success: false, error: error?.message || "Failed to delete user" };
+  }
+}

@@ -79,6 +79,7 @@ export async function loginUser(data: LoginInput) {
 
 /**
  * Registers a new user and sends an OTP verification email via Resend
+ * User data is stored in temporary verification token and NOT created in the users table until verified.
  */
 export async function registerUser(data: RegisterInput) {
   try {
@@ -94,44 +95,12 @@ export async function registerUser(data: RegisterInput) {
       if (existingUser.emailVerified) {
         return { success: false, error: "Email is already registered. Please sign in." };
       }
-      
-      // If user registered before but hasn't verified yet, update password/name and resend OTP
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await prisma.user.update({
-        where: { email },
-        data: {
-          name: name || existingUser.name,
-          password: hashedPassword,
-        },
-      });
-
-      const { token, otp } = await generateVerificationToken(email);
-      await sendVerificationEmail(email, name, token, otp);
-
-      return {
-        success: true,
-        requiresVerification: true,
-        email: existingUser.email,
-        userId: existingUser.id,
-      };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name,
-        password: hashedPassword,
-        emailVerified: null, // Requires OTP verification
-        preferences: {
-          create: {}, // Create default preferences
-        }
-      },
-    });
-
-    // Generate token & 6-digit OTP
-    const { token, otp } = await generateVerificationToken(email);
+    // Generate token & 6-digit OTP (embeds pending name & password without creating user in DB)
+    const { token, otp } = await generateVerificationToken(email, name, hashedPassword);
 
     // Send email via Resend
     await sendVerificationEmail(email, name, token, otp);
@@ -139,8 +108,7 @@ export async function registerUser(data: RegisterInput) {
     return {
       success: true,
       requiresVerification: true,
-      email: user.email,
-      userId: user.id
+      email,
     };
   } catch (error) {
     console.error("Registration Error:", error);
@@ -149,7 +117,8 @@ export async function registerUser(data: RegisterInput) {
 }
 
 /**
- * Verifies user email with 6-digit OTP or token
+ * Verifies user email with 6-digit OTP or token.
+ * Populates the users table ONLY upon successful verification.
  */
 export async function verifyEmailAction(email: string, codeOrToken: string) {
   try {
@@ -159,11 +128,27 @@ export async function verifyEmailAction(email: string, codeOrToken: string) {
       return { success: false, error: validation.error || "Verification failed" };
     }
 
-    // Update user record emailVerified
-    await prisma.user.update({
-      where: { email },
-      data: { emailVerified: new Date() },
-    });
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+
+    if (existingUser) {
+      await prisma.user.update({
+        where: { email },
+        data: { emailVerified: new Date() },
+      });
+    } else {
+      // Create user record in DB now that verification is 100% completed
+      await prisma.user.create({
+        data: {
+          email,
+          name: validation.name,
+          password: validation.hashedPassword,
+          emailVerified: new Date(),
+          preferences: {
+            create: {}, // Create default preferences
+          },
+        },
+      });
+    }
 
     return { success: true, message: "Email verified successfully! You can now log in." };
   } catch (error) {
@@ -173,23 +158,32 @@ export async function verifyEmailAction(email: string, codeOrToken: string) {
 }
 
 /**
- * Resends a new OTP to the specified email
+ * Resends a new OTP to the specified email for pending verification
  */
 export async function resendVerificationOtpAction(email: string) {
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return { success: false, error: "No user found with this email" };
+    const tokenRecord = await prisma.verificationToken.findFirst({
+      where: { identifier: email },
+    });
+
+    if (tokenRecord) {
+      const parts = tokenRecord.token.split(":");
+      const encodedName = parts[2] || "";
+      const storedHashedPassword = parts[3] || "";
+      const name = encodedName ? decodeURIComponent(encodedName) : null;
+
+      const { token, otp } = await generateVerificationToken(email, name, storedHashedPassword);
+      await sendVerificationEmail(email, name, token, otp);
+
+      return { success: true, message: "A new OTP code has been sent to your email." };
     }
 
-    if (user.emailVerified) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser && existingUser.emailVerified) {
       return { success: false, error: "This email is already verified. You can log in." };
     }
 
-    const { token, otp } = await generateVerificationToken(email);
-    await sendVerificationEmail(email, user.name, token, otp);
-
-    return { success: true, message: "A new OTP code has been sent to your email." };
+    return { success: false, error: "No pending verification request found for this email." };
   } catch (error) {
     console.error("Resend OTP Error:", error);
     return { success: false, error: "Failed to resend verification code" };
