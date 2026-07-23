@@ -65,41 +65,44 @@ export function UserTableActions({
       {/* Premium Centered Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-950 border border-red-500/30 rounded-2xl p-6 max-w-lg w-full shadow-2xl shadow-red-950/20 space-y-5 text-left text-foreground relative animate-in zoom-in-95 duration-200">
+          <div className="bg-slate-950 border border-red-500/30 rounded-2xl p-6 max-w-md sm:max-w-lg w-full shadow-2xl shadow-red-950/20 space-y-5 text-left text-foreground relative animate-in zoom-in-95 duration-200 box-border">
             {/* Close button */}
             <button
               onClick={() => setShowConfirm(false)}
-              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* Header */}
-            <div className="flex items-center space-x-3 text-red-500">
-              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20">
-                <AlertTriangle className="w-5 h-5" />
+            <div className="flex items-center space-x-3 text-red-500 pr-6">
+              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground">Delete User Account</h3>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-bold text-foreground truncate">Delete User Account</h3>
                 <p className="text-xs text-muted-foreground">Permanent Account Removal</p>
               </div>
             </div>
 
             {/* Content */}
-            <div className="space-y-2 text-sm text-slate-300 leading-relaxed bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
-              <p>
-                Are you sure you want to delete <strong className="text-white">{userName}</strong>?
+            <div className="space-y-3 text-sm text-slate-300 leading-relaxed bg-slate-900/80 p-4 rounded-xl border border-slate-800/80 w-full max-w-full overflow-hidden text-wrap break-words box-border">
+              <p className="text-slate-200 font-medium">
+                Are you sure you want to delete <strong className="text-white font-bold">{userName}</strong>?
               </p>
-              <p className="text-xs text-violet-400 font-mono break-all">
+              <p className="text-xs text-violet-400 font-mono break-all bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800/80 w-full box-border">
                 {userEmail}
               </p>
-              <p className="text-xs text-red-400 font-medium pt-1">
-                ⚠️ Warning: All user bookmarks, reactions, and preferences will be permanently wiped.
-              </p>
+              <div className="flex items-start space-x-2 text-xs text-red-400 font-medium pt-1">
+                <span className="shrink-0 text-amber-400">⚠️</span>
+                <span className="text-wrap break-words leading-normal flex-1">
+                  Warning: All user bookmarks, reactions, and preferences will be permanently wiped.
+                </span>
+              </div>
             </div>
 
             {errorMessage && (
-              <div className="p-3 text-xs text-red-400 bg-red-950/40 border border-red-800/50 rounded-xl">
+              <div className="p-3 text-xs text-red-400 bg-red-950/40 border border-red-800/50 rounded-xl break-words">
                 {errorMessage}
               </div>
             )}
@@ -111,7 +114,7 @@ export function UserTableActions({
                 size="sm"
                 onClick={() => setShowConfirm(false)}
                 disabled={isDeleting}
-                className="cursor-pointer border-slate-800 hover:bg-slate-900 text-slate-300 rounded-xl"
+                className="cursor-pointer border-slate-800 hover:bg-slate-900 text-slate-300 rounded-xl px-4"
               >
                 Cancel
               </Button>
@@ -120,7 +123,7 @@ export function UserTableActions({
                 size="sm"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl cursor-pointer shadow-lg shadow-red-950/50"
+                className="bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl cursor-pointer shadow-lg shadow-red-950/50 px-4"
               >
                 {isDeleting ? (
                   <span className="flex items-center space-x-2">
