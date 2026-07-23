@@ -13,7 +13,7 @@ const globalForPrisma = globalThis as unknown as {
 
 function getConnectionString(): string {
   let url = process.env.DATABASE_URL || process.env.DIRECT_URL || "";
-  // Ensure connection_limit=1 on Supabase pooler connections to prevent EMAXCONNSESSION
+  if (!url) return "";
   if (url.includes(":6543") && !url.includes("connection_limit=")) {
     const separator = url.includes("?") ? "&" : "?";
     url = `${url}${separator}connection_limit=1`;
