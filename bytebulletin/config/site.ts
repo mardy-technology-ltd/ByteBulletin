@@ -4,7 +4,7 @@ export const siteConfig = {
   name: "ByteBulletin",
   description:
     "AI-powered news aggregator delivering the world's top stories with Gemini-powered summaries, curated by category, in real time.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://bytebulletin.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thebytebulletin.com",
   ogImage: "/og-image.png",
   links: {
     twitter: "https://twitter.com/bytebulletin",

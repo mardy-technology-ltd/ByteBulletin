@@ -14,7 +14,7 @@ export function Footer() {
             AI-powered tech & business intelligence delivering synthesized summaries, curated by category for Tier-1 readers.
           </p>
           <p className="text-xs text-muted-foreground pt-2">
-            © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+            © {new Date().getFullYear()} {siteConfig.name} — Published on <a href="https://thebytebulletin.com" className="hover:underline text-primary">thebytebulletin.com</a>. All rights reserved.
           </p>
         </div>
         

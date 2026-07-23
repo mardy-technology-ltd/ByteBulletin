@@ -16,7 +16,7 @@ export async function getGlobalSettingsAction() {
       settings: {
         siteName: settingsMap["site_name"] || "ByteBulletin",
         siteDescription: settingsMap["site_description"] || "AI-powered tech & business news aggregator delivering synthesized summaries.",
-        contactEmail: settingsMap["contact_email"] || "support@bytebulletin.com",
+        contactEmail: settingsMap["contact_email"] || "support@thebytebulletin.com",
         takeawaysCount: settingsMap["takeaways_count"] || "5",
         autoAiSummary: settingsMap["auto_ai_summary"] ?? "true",
         consentModeV2: settingsMap["consent_mode_v2"] ?? "true",
