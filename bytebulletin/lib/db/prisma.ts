@@ -11,12 +11,22 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+function getConnectionString(): string {
+  let url = process.env.DIRECT_URL || process.env.DATABASE_URL || "";
+  // Ensure connection_limit=1 on Supabase pooler connections to prevent EMAXCONNSESSION
+  if (url.includes(":6543") && !url.includes("connection_limit=")) {
+    const separator = url.includes("?") ? "&" : "?";
+    url = `${url}${separator}connection_limit=1`;
+  }
+  return url;
+}
+
 function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  const connectionString = getConnectionString();
   const pool = new Pool({
     connectionString,
-    max: 2, // Strict limit per worker to stay within Supabase session pool limit
-    idleTimeoutMillis: 10000,
+    max: 1, // Single connection per serverless lambda prevents pool exhaustion
+    idleTimeoutMillis: 1000, // Release connection slot back to Supabase pooler immediately
     connectionTimeoutMillis: 5000,
     ssl: { rejectUnauthorized: false },
   });
