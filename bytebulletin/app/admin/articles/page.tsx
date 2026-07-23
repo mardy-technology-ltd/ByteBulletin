@@ -16,6 +16,8 @@ export const metadata = {
   title: "Articles Management - Admin",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminArticlesPage() {
   const articles = await prisma.article.findMany({
     include: {

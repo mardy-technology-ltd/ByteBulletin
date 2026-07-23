@@ -17,9 +17,12 @@ export const metadata = {
   title: "Users Management - Admin",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminUsersPage() {
   const session = await auth();
   const currentUserId = session?.user?.id;
+  const currentUserEmail = session?.user?.email;
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
@@ -91,7 +94,7 @@ export default async function AdminUsersPage() {
                       userId={user.id}
                       userName={user.name || user.email}
                       userEmail={user.email}
-                      isCurrentUser={user.id === currentUserId}
+                      isCurrentUser={Boolean(currentUserId && user.id === currentUserId) || Boolean(currentUserEmail && user.email === currentUserEmail)}
                     />
                   </TableCell>
                 </TableRow>
