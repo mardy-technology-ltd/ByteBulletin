@@ -3,58 +3,31 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 // ─────────────────────────────────────────────────────────────
-// Prisma Client Dynamic Proxy Singleton
-// Ensures automatic model refresh during development HMR
+// Production-Ready Prisma Client Singleton
+// Prevents connection pool leaks on Vercel Serverless Functions
 // ─────────────────────────────────────────────────────────────
 
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+
 function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
-  const pool = new Pool({ connectionString });
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  const pool = new Pool({
+    connectionString,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+  });
+
   const adapter = new PrismaPg(pool);
 
-  let DynamicPrismaClient = PrismaClient;
-  try {
-    if (typeof require !== "undefined" && require.cache) {
-      Object.keys(require.cache).forEach((key) => {
-        if (key.includes("@prisma") || key.includes(".prisma")) {
-          delete require.cache[key];
-        }
-      });
-      DynamicPrismaClient = require("@prisma/client").PrismaClient || PrismaClient;
-    }
-  } catch (e) {
-    console.warn("[Prisma Dynamic Reload Warning]:", e);
-  }
-
-  return new DynamicPrismaClient({
+  return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 }
 
-function getPrismaInstance(): PrismaClient {
-  const gPrisma = (globalThis as any).prisma;
-  if (!gPrisma || !gPrisma.articleReaction || !gPrisma.comment || !gPrisma.passwordResetToken) {
-    const client = createPrismaClient();
-    if (process.env.NODE_ENV !== "production") {
-      (globalThis as any).prisma = client;
-    }
-    return client;
-  }
-  return gPrisma;
+export const prisma = globalForPrisma.prisma || createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
 }
-
-export const prisma = new Proxy({} as PrismaClient, {
-  get(_target, prop) {
-    let instance = getPrismaInstance() as any;
-
-    // Auto-heal: If a model property is accessed but undefined on current instance, purge cache and recreate
-    if (typeof prop === "string" && !prop.startsWith("$") && !prop.startsWith("_") && instance[prop] === undefined) {
-      delete (globalThis as any).prisma;
-      instance = getPrismaInstance() as any;
-    }
-
-    const value = instance[prop];
-    return typeof value === "function" ? value.bind(instance) : value;
-  },
-});
