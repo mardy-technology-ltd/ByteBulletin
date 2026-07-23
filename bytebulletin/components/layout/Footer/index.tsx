@@ -5,7 +5,7 @@ import Link from "next/link";
 export function Footer() {
   return (
     <footer className="border-t py-12 md:py-16 bg-slate-950/80 text-foreground border-border/40">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="max-w-[1536px] mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="col-span-1 md:col-span-1 space-y-4">
           <Link href="/" className="font-bold text-2xl inline-block font-heading text-white">
             {siteConfig.name}

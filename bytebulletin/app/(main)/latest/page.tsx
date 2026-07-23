@@ -28,7 +28,7 @@ export default async function LatestNewsPage() {
   }));
 
   return (
-    <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8 space-y-10">
+    <div className="max-w-[1536px] mx-auto py-10 px-4 sm:px-6 lg:px-8 space-y-10">
       {/* Page Header */}
       <div className="space-y-3 border-b border-border/40 pb-8">
         <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-400 text-xs font-extrabold uppercase tracking-wider">

@@ -30,7 +30,7 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 flex h-16 items-center justify-between">
+      <div className="max-w-[1536px] mx-auto px-4 md:px-8 flex h-16 items-center justify-between">
         <div className="flex items-center gap-6 md:gap-10">
           <Link href="/" className="flex items-center space-x-2 group">
             <span className="font-bold text-xl inline-block font-heading tracking-tight gradient-text group-hover:opacity-90 transition-opacity">

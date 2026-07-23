@@ -20,7 +20,7 @@ export default async function BookmarksPage() {
   const bookmarkedArticles = await BookmarkRepository.getUserBookmarks(session.user.id);
 
   return (
-    <div className="max-w-7xl mx-auto py-10 px-4 md:px-8 min-h-screen">
+    <div className="max-w-[1536px] mx-auto py-10 px-4 md:px-8 min-h-screen">
       <div className="border-b pb-6 mb-8 flex items-center">
         <Bookmark className="w-8 h-8 mr-3 text-primary" />
         <h1 className="font-heading text-4xl font-bold tracking-tight">My Bookmarks</h1>
