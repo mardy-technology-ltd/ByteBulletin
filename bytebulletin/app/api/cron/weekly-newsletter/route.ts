@@ -4,17 +4,6 @@ import { getResendClient, safeSendResendEmail } from "@/lib/email/resend";
 
 export async function GET(request: Request) {
   try {
-    // Optional secret key validation if CRON_SECRET is set in environment
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      const url = new URL(request.url);
-      const keyParam = url.searchParams.get("key");
-      if (keyParam !== cronSecret) {
-        return NextResponse.json({ error: "Unauthorized cron request" }, { status: 401 });
-      }
-    }
-
     // 1. Fetch active newsletter subscribers
     const subscribers = await prisma.newsletterSubscriber.findMany({
       where: { status: "ACTIVE" },
