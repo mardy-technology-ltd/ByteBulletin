@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = article.seo?.title || article.title;
   const description = article.seo?.description || article.excerpt;
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bytebulletin.com";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.thebytebulletin.com";
   const url = `${siteUrl}/news/${slug}`;
   const keywords = article.seo?.keywords?.join(", ") || "";
 
@@ -96,7 +96,7 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
   }
 
   // Enriched Multi-Schema JSON-LD Structured Data for Google News, Discover & AI Overviews
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bytebulletin.com";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.thebytebulletin.com";
   const canonicalUrl = `${siteUrl}/news/${slug}`;
 
   const jsonLd = {
