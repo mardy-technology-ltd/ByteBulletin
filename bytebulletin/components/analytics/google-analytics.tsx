@@ -3,7 +3,7 @@
 import Script from "next/script";
 
 export function GoogleAnalytics({ gaId }: { gaId?: string }) {
-  const measurementId = gaId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-QLJ6PLHFTE";
+  const measurementId = gaId || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-5FXRDDPW4P";
 
   if (!measurementId) return null;
 
