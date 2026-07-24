@@ -9,14 +9,13 @@ import {
   BarChart, 
   Mail, 
   Image as ImageIcon,
-  Activity,
-  LogOut
+  Activity
 } from "lucide-react";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { auth } from "@/lib/auth/config";
 import { redirect } from "next/navigation";
-
 import { AdminSignOutButton } from "./admin-sign-out-button";
+import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -38,8 +37,11 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   ];
 
   return (
-    <div className="flex min-h-screen bg-muted/40">
-      {/* Sidebar */}
+    <div className="flex flex-col sm:flex-row min-h-screen bg-muted/40 overflow-x-hidden w-full">
+      {/* Mobile Top Navigation Header */}
+      <AdminMobileNav />
+
+      {/* Desktop Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r bg-background sm:flex">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
@@ -66,9 +68,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 sm:pl-64">
-        <div className="flex flex-col sm:gap-4 sm:py-4 sm:px-6">
+      {/* Main Content Area */}
+      <main className="flex-1 sm:pl-64 w-full min-w-0 max-w-full overflow-x-hidden">
+        <div className="flex flex-col p-4 sm:p-6 md:p-8 space-y-6 w-full min-w-0 max-w-full">
           {children}
         </div>
       </main>

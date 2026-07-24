@@ -8,6 +8,7 @@ import { DesktopNav } from "./desktop-nav";
 import { prisma } from "@/lib/db/prisma";
 import { UserNav } from "./user-nav";
 import { LiveSearchModal } from "@/components/common/live-search-modal";
+import { User as UserIcon } from "lucide-react";
 
 export async function Header() {
   const session = await auth();
@@ -30,24 +31,25 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-xs">
-      <div className="max-w-[1536px] mx-auto px-4 md:px-8 flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6 md:gap-10">
+      <div className="max-w-[1536px] mx-auto px-3 sm:px-4 md:px-8 flex h-16 items-center justify-between">
+        <div className="flex items-center gap-4 md:gap-10">
           <Link href="/" className="flex items-center space-x-2 group">
-            <span className="font-bold text-xl inline-block font-heading tracking-tight gradient-text group-hover:opacity-90 transition-opacity">
+            <span className="font-bold text-lg sm:text-xl inline-block font-heading tracking-tight gradient-text group-hover:opacity-90 transition-opacity">
               {siteConfig.name}
             </span>
           </Link>
           <DesktopNav />
         </div>
         
-        <div className="flex flex-1 items-center justify-end space-x-4">
-          <nav className="flex items-center space-x-2">
+        <div className="flex flex-1 items-center justify-end space-x-2 sm:space-x-4">
+          <nav className="flex items-center space-x-1.5 sm:space-x-2">
             <LiveSearchModal />
-            <div className="hidden md:flex items-center gap-2">
-              {user ? (
-                <UserNav user={user} />
-              ) : (
-                <div className="flex items-center gap-2">
+            
+            {user ? (
+              <UserNav user={user} />
+            ) : (
+              <>
+                <div className="hidden sm:flex items-center gap-2">
                   <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
                     Log in
                   </Link>
@@ -55,8 +57,16 @@ export async function Header() {
                     Sign up
                   </Link>
                 </div>
-              )}
-            </div>
+                <Link
+                  href="/login"
+                  className="flex sm:hidden items-center justify-center p-2 rounded-xl text-muted-foreground hover:text-foreground bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-900/80 dark:hover:bg-slate-800 border border-border/80 transition-colors"
+                  aria-label="Log in"
+                >
+                  <UserIcon className="w-4 h-4 text-violet-500 dark:text-violet-400" />
+                </Link>
+              </>
+            )}
+            
             <ThemeToggle />
             <MobileNav session={{ ...session, user }} />
           </nav>

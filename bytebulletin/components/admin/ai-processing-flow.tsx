@@ -151,7 +151,7 @@ export function AiProcessingFlow() {
   };
 
   return (
-    <Card className="col-span-4 flex flex-col overflow-hidden border-border/50 bg-slate-950 text-slate-300 shadow-md">
+    <Card className="col-span-1 lg:col-span-4 w-full flex flex-col overflow-hidden border-border/50 bg-slate-950 text-slate-300 shadow-md">
       <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-slate-950/80 backdrop-blur pb-3 pt-4">
         <div className="flex flex-col gap-1">
           <CardTitle className="text-sm font-mono text-slate-100 flex items-center gap-2">

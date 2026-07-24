@@ -38,7 +38,7 @@ export function RecentAiSummaries({ initialSummaries }: { initialSummaries: AISu
   }, []);
 
   return (
-    <Card className="col-span-3 border-border/50 bg-background shadow-sm">
+    <Card className="col-span-1 lg:col-span-3 w-full border-border/50 bg-background shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-emerald-500" />

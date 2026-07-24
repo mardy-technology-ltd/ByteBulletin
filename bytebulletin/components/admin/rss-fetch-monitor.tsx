@@ -42,7 +42,7 @@ export function RssFetchMonitor({ initialLogs }: { initialLogs?: RssLogItem[] })
 
   return (
     <Card className="w-full border-border/50 bg-background shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4">
+      <CardHeader className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 pb-3 pt-4">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Rss className="h-4 w-4 text-blue-500" />
           RSS News Fetch Monitor

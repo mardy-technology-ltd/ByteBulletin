@@ -58,7 +58,7 @@ export default async function AdminDashboardPage() {
   }));
 
   return (
-    <div className="p-6">
+    <div className="space-y-6 w-full min-w-0 max-w-full">
       <div className="mb-8">
         <h1 className="text-3xl font-heading font-bold tracking-tight">Dashboard Overview</h1>
         <p className="text-muted-foreground">Monitor the health and performance of the AI News Aggregator.</p>
@@ -73,7 +73,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* 2. AI Summary Processing & Cron Monitor + Recent AI Summaries below */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-6">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-7 mt-6 w-full min-w-0 max-w-full">
         <AiProcessingFlow />
         <RecentAiSummaries initialSummaries={initialSummaries} />
       </div>

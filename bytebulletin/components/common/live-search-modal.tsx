@@ -48,31 +48,31 @@ export function LiveSearchModal() {
     setSelectedIndex(-1);
   };
 
-  // Debounced search query
+  // Debounced real-time search trigger
   useEffect(() => {
-    const trimmed = query.trim();
-    if (trimmed.length < 2) {
+    if (!query.trim()) {
       setResults([]);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    const timer = setTimeout(async () => {
+    const handler = setTimeout(async () => {
       try {
-        const data = await searchArticlesAction(trimmed);
+        const data = await searchArticlesAction(query);
         setResults(data);
-      } catch (error) {
-        console.error("Live search failed", error);
+      } catch (err) {
+        console.error("Live search error:", err);
       } finally {
         setIsLoading(false);
       }
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(handler);
   }, [query]);
 
-  const handleKeyDownInput = (e: React.KeyboardEvent) => {
+  // Keyboard navigation within search results list
+  const handleKeyDownInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
@@ -90,7 +90,16 @@ export function LiveSearchModal() {
 
   return (
     <>
-      {/* Header Search Trigger Button - Adaptive Light & Dark mode */}
+      {/* Mobile/Tablet View Search Button Trigger (Icon Only) */}
+      <button
+        onClick={() => setIsOpen(true)}
+        aria-label="Search articles"
+        className="flex lg:hidden items-center justify-center p-2 rounded-xl text-muted-foreground hover:text-foreground bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-900/80 dark:hover:bg-slate-800 border border-border/80 transition-colors cursor-pointer"
+      >
+        <Search className="w-4 h-4 text-violet-500 dark:text-violet-400" />
+      </button>
+
+      {/* Desktop Search Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
         className="hidden lg:flex items-center space-x-3 text-xs text-muted-foreground bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-900/80 dark:hover:bg-slate-800 border border-border/80 hover:border-violet-500/40 rounded-xl px-3.5 py-2 w-64 transition-all shadow-xs cursor-pointer group"
@@ -131,7 +140,7 @@ export function LiveSearchModal() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleClose}
                   className="text-xs font-bold text-muted-foreground bg-muted hover:bg-muted/80 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                 >
                   ESC
@@ -146,7 +155,7 @@ export function LiveSearchModal() {
                   <Link
                     key={item.id}
                     href={`/news/${item.slug}`}
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleClose}
                     className={`flex items-start space-x-3.5 p-3 rounded-2xl transition-all ${
                       selectedIndex === index
                         ? "bg-violet-500/10 border border-violet-500/40 text-foreground"
@@ -158,56 +167,49 @@ export function LiveSearchModal() {
                         src={item.imageUrl}
                         alt={item.title}
                         fill
-                        sizes="64px"
                         className="object-cover"
                       />
                     </div>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-violet-500 dark:text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">
-                          {item.categoryName}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 text-xs text-muted-foreground mb-1">
+                        <span className="font-semibold text-violet-600 dark:text-violet-400">
+                          {item.categoryName || "News"}
                         </span>
-                        <span className="text-xs text-muted-foreground">• {item.sourceName}</span>
-                        {item.isAiSummarized && (
-                          <span className="inline-flex items-center text-[10px] font-bold text-emerald-500 dark:text-emerald-400">
-                            <Sparkles className="w-3 h-3 mr-0.5 fill-current" /> AI
-                          </span>
-                        )}
+                        <span>•</span>
+                        <span>{new Date(item.publishedAt).toLocaleDateString()}</span>
                       </div>
-                      <h4 className="text-sm font-bold text-foreground line-clamp-1 leading-snug">
+                      <h4 className="text-sm font-bold text-foreground line-clamp-2 leading-snug">
                         {item.title}
                       </h4>
-                      {item.excerpt && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {item.excerpt}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                        {item.excerpt}
+                      </p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-violet-500 shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Link>
                 ))
-              ) : query.trim().length >= 2 && !isLoading ? (
-                <div className="py-12 text-center text-sm text-muted-foreground space-y-2">
-                  <p className="font-semibold text-foreground">No stories found for &ldquo;{query}&rdquo;</p>
-                  <p className="text-xs text-muted-foreground">Try searching for keywords like AI, OpenAI, Tech, Cloud, or Security.</p>
+              ) : query && !isLoading ? (
+                <div className="py-12 text-center text-muted-foreground space-y-2">
+                  <p className="text-sm font-medium">No results found for &quot;{query}&quot;</p>
+                  <p className="text-xs">Try searching for keywords like AI, OpenAI, LLM, or Google.</p>
                 </div>
               ) : (
-                <div className="py-8 px-4 text-xs text-muted-foreground space-y-4">
-                  <p className="font-bold uppercase tracking-wider text-violet-500 dark:text-violet-400">Popular Search Topics</p>
-                  <div className="flex flex-wrap gap-2">
-                    {["OpenAI", "ChatGPT Pro", "Cybersecurity", "Apple iPhone 16", "Cloud Computing", "EV Tech"].map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => setQuery(tag)}
-                        className="px-3 py-1.5 rounded-xl bg-muted hover:bg-violet-500/20 text-muted-foreground hover:text-foreground border border-border/50 transition-all text-xs cursor-pointer"
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                <div className="py-8 text-center text-xs text-muted-foreground">
+                  <div className="flex items-center justify-center space-x-1.5 font-medium text-violet-600 dark:text-violet-400 mb-2">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Real-time instant AI search</span>
                   </div>
+                  <p>Type keywords to filter live database articles instantaneously.</p>
                 </div>
               )}
             </div>
+
+            {/* Footer status bar */}
+            {results.length > 0 && (
+              <div className="px-4 py-2 bg-slate-100/50 dark:bg-slate-900/50 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Showing {results.length} search results</span>
+                <span className="hidden sm:inline">Use ↑↓ arrows to navigate, Enter to select</span>
+              </div>
+            )}
           </div>
         </div>
       )}
