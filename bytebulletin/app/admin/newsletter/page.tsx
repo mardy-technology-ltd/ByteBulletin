@@ -1,7 +1,9 @@
 import { Metadata } from "next";
 import { getNewsletterSubscribersAction } from "@/actions/newsletter.actions";
-import { Mail, Users, CheckCircle2, Calendar, Download } from "lucide-react";
+import { Mail, Users, CheckCircle2, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ExportCsvButton } from "./export-csv-button";
+import { BroadcastModal } from "./broadcast-modal";
 
 export const metadata: Metadata = {
   title: "Newsletter Subscribers | ByteBulletin Admin",
@@ -31,6 +33,8 @@ export default async function AdminNewsletterPage() {
           <Badge variant="outline" className="px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary border-primary/30">
             Total Leads: {subscribers.length}
           </Badge>
+          <ExportCsvButton subscribers={subscribers} />
+          <BroadcastModal totalSubscribers={activeCount} />
         </div>
       </div>
 
@@ -54,10 +58,10 @@ export default async function AdminNewsletterPage() {
 
         <div className="p-6 rounded-2xl bg-card border shadow-sm space-y-2">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-bold uppercase tracking-wider">Growth Target</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Sender Domain</span>
             <Mail className="w-5 h-5 text-violet-500" />
           </div>
-          <p className="text-3xl font-extrabold font-heading text-violet-500">Tier-1 Qualified</p>
+          <p className="text-lg font-bold font-heading text-violet-400 truncate">mail.thebytebulletin.com</p>
         </div>
       </div>
 
