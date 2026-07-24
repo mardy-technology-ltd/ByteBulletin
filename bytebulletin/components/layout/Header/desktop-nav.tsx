@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { mainNav } from "@/config/nav";
+import { MegaMenu } from "./mega-menu";
 
 export function DesktopNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="hidden md:flex items-center gap-1.5">
+    <nav className="hidden md:flex items-center gap-1 sm:gap-1.5">
       {mainNav.map((item) => {
         const isActive =
           item.href === "/"
@@ -34,6 +35,9 @@ export function DesktopNav() {
           </Link>
         );
       })}
+
+      {/* TechCrunch-Style Mega Menu for 20+ Categories */}
+      <MegaMenu />
     </nav>
   );
 }
