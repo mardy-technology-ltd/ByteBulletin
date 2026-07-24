@@ -1,17 +1,22 @@
 import { Metadata } from "next";
 import { getNewsletterSubscribersAction } from "@/actions/newsletter.actions";
+import { getSponsorSettingAction } from "@/actions/sponsor.actions";
 import { Mail, Users, CheckCircle2, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ExportCsvButton } from "./export-csv-button";
 import { BroadcastModal } from "./broadcast-modal";
+import { SponsorConfigCard } from "./sponsor-config-card";
 
 export const metadata: Metadata = {
-  title: "Newsletter Subscribers | ByteBulletin Admin",
-  description: "Manage and view all email subscribers captured via Exit-Intent modal and footer signup forms.",
+  title: "Newsletter Subscribers & Sponsor Banner | ByteBulletin Admin",
+  description: "Manage email subscribers, download CSV leads, send email broadcasts, and configure weekly newsletter sponsor banners.",
 };
 
 export default async function AdminNewsletterPage() {
-  const { subscribers } = await getNewsletterSubscribersAction();
+  const [{ subscribers }, sponsorRes] = await Promise.all([
+    getNewsletterSubscribersAction(),
+    getSponsorSettingAction(),
+  ]);
 
   const activeCount = subscribers.filter((s: any) => s.status === "ACTIVE").length;
 
@@ -22,10 +27,10 @@ export default async function AdminNewsletterPage() {
         <div>
           <h1 className="text-3xl font-bold font-heading tracking-tight flex items-center gap-2">
             <Mail className="w-8 h-8 text-primary" />
-            <span>Newsletter Subscribers</span>
+            <span>Newsletter & Sponsor Management</span>
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Real-time subscriber leads captured via Exit-Intent popup and footer signup forms.
+            Manage subscriber leads, configure automated weekly sponsored banners, and broadcast emails.
           </p>
         </div>
 
@@ -64,6 +69,9 @@ export default async function AdminNewsletterPage() {
           <p className="text-lg font-bold font-heading text-violet-400 truncate">mail.thebytebulletin.com</p>
         </div>
       </div>
+
+      {/* Weekly Newsletter Sponsor Banner Config */}
+      <SponsorConfigCard initialSponsor={sponsorRes.sponsor} />
 
       {/* Subscribers Table */}
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">

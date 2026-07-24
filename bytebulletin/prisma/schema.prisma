@@ -159,6 +159,18 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model SponsorSetting {
+  id          String   @id @default("active_sponsor")
+  brandName   String?
+  logoUrl     String?
+  sponsorText String?
+  sponsorLink String?
+  isEnabled   Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+
+  @@map("sponsor_settings")
+}
+
 // ─────────────────────────────────────────────
 // DOMAIN ENTITIES
 // ─────────────────────────────────────────────
