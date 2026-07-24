@@ -7,6 +7,9 @@ import { ArticleRepository } from "@/repositories/article.repository";
 import { getArticleImage } from "@/lib/utils/image";
 import { InfiniteArticleFeed } from "@/components/common/infinite-article-feed";
 import { FeedArticleItem } from "@/actions/article.actions";
+import { TechMarketWidget } from "@/components/home/tech-market-widget";
+import { CategoryShowcaseSection } from "@/components/home/category-showcase-section";
+import { InlineCtaBanner } from "@/components/home/inline-cta-banner";
 
 // ISR: Revalidate the homepage every 60 seconds
 export const revalidate = 60;
@@ -17,7 +20,7 @@ export default async function Home() {
 
   // Fetch all required data in parallel for performance
   const [latestResult, trendingArticles, breakingNews] = await Promise.all([
-    ArticleRepository.getPaginatedLatest(1, 6, primaryHeroId),
+    ArticleRepository.getPaginatedLatest(1, 8, primaryHeroId),
     ArticleRepository.getTrending(5),
     ArticleRepository.getBreakingNews(6),
   ]);
@@ -53,6 +56,17 @@ export default async function Home() {
     isAiSummarized: !!article.aiSummary,
   }));
 
+  // Articles for the Category Showcase section
+  const showcaseArticles = latestResult.articles.map((a: any) => ({
+    id: a.id,
+    title: a.title,
+    slug: a.slug,
+    imageUrl: getArticleImage(a.imageUrl, a.category?.slug, a.id),
+    categoryName: a.category?.name || "Technology",
+    excerpt: a.excerpt,
+    publishedAt: a.publishedAt.toISOString(),
+  }));
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Synchronized Hero Section (Breaking News Ticker + Featured Slider Master Controller) */}
@@ -63,6 +77,7 @@ export default async function Home() {
 
       <main className="flex-1">
         <div className="max-w-[1536px] mx-auto px-4 md:px-8 py-8 space-y-12">
+          {/* Main Grid: Feed + Sidebar */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             {/* Main Feed */}
             <div className="lg:col-span-8 space-y-6">
@@ -106,9 +121,9 @@ export default async function Home() {
             </div>
 
             {/* Sidebar */}
-            <aside className="lg:col-span-4 space-y-8">
+            <aside className="lg:col-span-4 space-y-6">
               {/* Trending Section */}
-              <div className="rounded-2xl border border-border/40 bg-card/40 p-6 space-y-4 shadow-sm backdrop-blur-xs">
+              <div className="rounded-3xl border border-border/40 bg-card/40 p-6 space-y-4 shadow-sm backdrop-blur-xs">
                 <h3 className="font-heading text-lg font-bold tracking-tight border-b border-border/40 pb-3 flex items-center justify-between">
                   <span>Trending Topics</span>
                   <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -127,8 +142,17 @@ export default async function Home() {
                   ))}
                 </div>
               </div>
+
+              {/* AI & Tech Stock Market Widget */}
+              <TechMarketWidget />
             </aside>
           </div>
+
+          {/* Curated Category Showcase Section */}
+          <CategoryShowcaseSection articles={showcaseArticles} />
+
+          {/* Executive Newsletter & Contribution CTA Banner */}
+          <InlineCtaBanner />
         </div>
       </main>
     </div>
