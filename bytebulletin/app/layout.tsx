@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { defaultMetadata } from "@/config/site";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { GoogleReaderRevenue } from "@/components/monetization/google-reader-revenue";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,6 +26,7 @@ export default function RootLayout({
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <GoogleAnalytics />
+        <GoogleReaderRevenue />
       </head>
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`} suppressHydrationWarning>
         <ThemeProvider
