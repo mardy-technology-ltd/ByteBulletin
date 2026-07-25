@@ -216,7 +216,11 @@ export class ArticleRepository {
    * Fetches a single article by slug with detailed relations.
    */
   static async getBySlug(slug: string) {
-    return prisma.article.findUnique({
+    if (!slug) return null;
+    const decoded = decodeURIComponent(slug);
+
+    // 1. Try exact findUnique
+    let article = await prisma.article.findUnique({
       where: { slug },
       include: {
         source: true,
@@ -226,5 +230,40 @@ export class ArticleRepository {
         seo: true,
       },
     });
+
+    // 2. Fallback to decoded slug
+    if (!article && decoded !== slug) {
+      article = await prisma.article.findUnique({
+        where: { slug: decoded },
+        include: {
+          source: true,
+          category: true,
+          tags: true,
+          aiSummary: true,
+          seo: true,
+        },
+      });
+    }
+
+    // 3. Fallback to case-insensitive matching
+    if (!article) {
+      article = await prisma.article.findFirst({
+        where: {
+          OR: [
+            { slug: { equals: slug, mode: "insensitive" } },
+            { slug: { equals: decoded, mode: "insensitive" } },
+          ],
+        },
+        include: {
+          source: true,
+          category: true,
+          tags: true,
+          aiSummary: true,
+          seo: true,
+        },
+      });
+    }
+
+    return article;
   }
 }
