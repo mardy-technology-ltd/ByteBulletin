@@ -50,6 +50,7 @@ export function MobileNav({ session }: MobileNavProps) {
                   <Link
                     key={index}
                     href={item.href}
+                    prefetch={true}
                     onClick={closeMenu}
                     className={`flex w-full items-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
                       isActive
@@ -82,6 +83,7 @@ export function MobileNav({ session }: MobileNavProps) {
                     <Link
                       key={idx}
                       href={item.href}
+                      prefetch={true}
                       onClick={closeMenu}
                       className="p-2 rounded-lg bg-muted/50 hover:bg-violet-500/15 transition-colors border border-border/40 text-xs font-medium text-foreground line-clamp-1"
                     >

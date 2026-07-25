@@ -20,6 +20,7 @@ export function DesktopNav() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={true}
             className={`relative px-3 py-1.5 text-sm font-semibold transition-all duration-200 rounded-full select-none ${
               isActive
                 ? "text-violet-600 dark:text-violet-400 bg-violet-500/10 dark:bg-violet-500/15 border border-violet-500/30 shadow-xs shadow-violet-500/20"

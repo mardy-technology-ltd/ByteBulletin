@@ -142,6 +142,7 @@ export function MegaMenu() {
                       <Link
                         key={itemIdx}
                         href={item.href}
+                        prefetch={true}
                         onClick={() => setIsOpen(false)}
                         className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-violet-500/10 dark:hover:bg-violet-500/15 transition-all group/item border border-transparent hover:border-violet-500/20"
                       >

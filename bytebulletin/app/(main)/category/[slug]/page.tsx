@@ -23,6 +23,25 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   };
 }
 
+// Top categories to statically generate at build time for instant tab switching
+export async function generateStaticParams() {
+  const topCategories = [
+    "technology",
+    "business",
+    "science",
+    "world",
+    "health",
+    "sports",
+    "entertainment",
+    "politics",
+    "environment"
+  ];
+  
+  return topCategories.map((slug) => ({
+    slug,
+  }));
+}
+
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
   
