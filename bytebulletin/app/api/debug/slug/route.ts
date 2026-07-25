@@ -2,13 +2,22 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 
 // TEMPORARY DEBUG ENDPOINT - Remove after diagnosis
-// Usage: /api/debug/slug?q=warner-bros  OR  /api/debug/slug?exact=warner-bros-...-ahr0ch
+// ping (no DB): /api/debug/slug?ping=1
+// search by keyword: /api/debug/slug?q=warner-bros
+// search by exact slug: /api/debug/slug?exact=warner-bros-...-ahr0ch
 export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const q = searchParams.get("q") || "";
-    const exact = searchParams.get("exact") || "";
+  const { searchParams } = new URL(request.url);
+  const ping = searchParams.get("ping");
 
+  // Simple ping test - no DB needed
+  if (ping) {
+    return NextResponse.json({ ok: true, pong: true, ts: Date.now() });
+  }
+
+  const q = searchParams.get("q") || "";
+  const exact = searchParams.get("exact") || "";
+
+  try {
     let exactResult = null;
     let containsResults: any[] = [];
     let totalCount = 0;
@@ -21,12 +30,10 @@ export async function GET(request: Request) {
       });
     }
 
-    // 2. Try contains search (using the q param as keyword)
+    // 2. Try contains search
     if (q) {
       containsResults = await prisma.article.findMany({
-        where: {
-          slug: { contains: q },
-        },
+        where: { slug: { contains: q } },
         select: { id: true, title: true, slug: true, status: true, publishedAt: true },
         orderBy: { publishedAt: "desc" },
         take: 10,
@@ -34,9 +41,7 @@ export async function GET(request: Request) {
     }
 
     // 3. Total published article count
-    totalCount = await prisma.article.count({
-      where: { status: "PUBLISHED" },
-    });
+    totalCount = await prisma.article.count({ where: { status: "PUBLISHED" } });
 
     return NextResponse.json({
       ok: true,
@@ -55,11 +60,7 @@ export async function GET(request: Request) {
     });
   } catch (error: any) {
     return NextResponse.json(
-      {
-        ok: false,
-        error: error?.message || "DB connection or query error",
-        stack: process.env.NODE_ENV === "development" ? error?.stack : undefined,
-      },
+      { ok: false, error: error?.message || "DB error" },
       { status: 500 }
     );
   }
