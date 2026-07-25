@@ -19,6 +19,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.thebytebulletin.com";
   const url = `${siteUrl}/news/${slug}`;
 
+  const categoryName = article.category?.name || "Tech";
+  const sourceName = article.source?.name || "ByteBulletin";
+
+  const dynamicOgUrl = `${siteUrl}/api/og?title=${encodeURIComponent(title)}&category=${encodeURIComponent(categoryName)}&source=${encodeURIComponent(sourceName)}`;
+
+  const ogImages = [
+    {
+      url: dynamicOgUrl,
+      width: 1200,
+      height: 630,
+      alt: title,
+    },
+    ...(article.imageUrl ? [{ url: article.imageUrl }] : []),
+  ];
+
   return {
     title,
     description,
@@ -27,19 +42,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       canonical: url,
     },
     openGraph: {
+      siteName: "ByteBulletin",
       title,
       description,
       url,
       type: "article",
       publishedTime: article.publishedAt.toISOString(),
-      authors: [article.source.name],
-      images: article.imageUrl ? [{ url: article.imageUrl }] : undefined,
+      authors: [sourceName],
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: article.imageUrl ? [article.imageUrl] : undefined,
+      images: [dynamicOgUrl],
     },
   };
 }
@@ -91,6 +107,11 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.thebytebulletin.com";
   const canonicalUrl = `${siteUrl}/news/${slug}`;
 
+  const title = article.seo?.title || article.title;
+  const categoryName = article.category?.name || "Tech";
+  const sourceName = article.source?.name || "ByteBulletin";
+  const dynamicOgUrl = `${siteUrl}/api/og?title=${encodeURIComponent(title)}&category=${encodeURIComponent(categoryName)}&source=${encodeURIComponent(sourceName)}`;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -101,11 +122,11 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
           "@type": "WebPage",
           "@id": canonicalUrl,
           "url": canonicalUrl,
-          "name": article.seo?.title || article.title
+          "name": title
         },
-        "headline": article.seo?.title || article.title,
+        "headline": title,
         "description": article.seo?.description || article.excerpt,
-        "image": article.imageUrl ? [article.imageUrl] : [`${siteUrl}/og-image.png`],
+        "image": [dynamicOgUrl, ...(article.imageUrl ? [article.imageUrl] : [])],
         "datePublished": article.publishedAt.toISOString(),
         "dateModified": article.updatedAt.toISOString(),
         "mainEntityOfPage": canonicalUrl,
@@ -136,7 +157,7 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
               "mainEntity": [
                 {
                   "@type": "Question",
-                  "name": `What are the key takeaways from "${article.title}"?`,
+                  "name": `What are the key takeaways from "${title}"?`,
                   "acceptedAnswer": {
                     "@type": "Answer",
                     "text": article.aiSummary.keyPoints.join(" ")
