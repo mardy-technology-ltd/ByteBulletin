@@ -1,6 +1,8 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/db/prisma";
 
+export const revalidate = 60; // Revalidate sitemap every 60 seconds
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://thebytebulletin.com";
 
