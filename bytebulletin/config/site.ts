@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const defaultSiteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://bytebulletin.com";
+const defaultSiteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://www.thebytebulletin.com";
 const defaultOgImage = `${defaultSiteUrl}/api/og?title=${encodeURIComponent("ByteBulletin — AI-Powered Tech News & Real-Time Bulletins")}&category=${encodeURIComponent("TECH & AI NEWS")}&source=${encodeURIComponent("ByteBulletin")}`;
 
 export const siteConfig = {

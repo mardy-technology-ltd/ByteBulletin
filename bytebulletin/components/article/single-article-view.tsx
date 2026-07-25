@@ -52,7 +52,7 @@ export function SingleArticleView({
     : article.publishedAt;
 
   const readingTime = Math.max(1, Math.ceil((article.content?.length || 1000) / 1000));
-  const articleUrl = `https://bytebulletin.com/news/${article.slug}`;
+  const articleUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://www.thebytebulletin.com"}/news/${article.slug}`;
 
   const defaultReactionCounts: Record<ReactionType | "total", number> = {
     LIKE: 0,
