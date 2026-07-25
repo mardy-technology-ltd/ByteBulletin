@@ -1,3 +1,5 @@
+"use client";
+
 import { Sparkles, ExternalLink, Zap, ShieldCheck } from "lucide-react";
 
 interface AffiliateBannerCardProps {
@@ -63,18 +65,11 @@ export function AffiliateBannerCard({ categorySlug }: AffiliateBannerCardProps) 
         <a
           href={offer.url}
           target="_blank"
-          rel="noopener noreferrer shadow-lg"
-          className="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md shadow-violet-600/30 transition-all hover:scale-[1.02] active:scale-95 shrink-0 cursor-pointer"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-violet-600/25 transition-all hover:scale-[1.03] active:scale-95 shrink-0"
         >
-          <span>{offer.cta}</span>
+          {offer.cta}
         </a>
-      </div>
-
-      <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between text-[10px] text-gray-500">
-        <span className="flex items-center gap-1">
-          <ShieldCheck className="w-3 h-3 text-violet-400" /> Verified Partner Offer
-        </span>
-        <span>Sponsored Partner Listing</span>
       </div>
     </div>
   );

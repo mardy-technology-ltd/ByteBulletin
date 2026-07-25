@@ -1,19 +1,12 @@
-import { AISummarySnippet } from "@/components/common/ai-summary-snippet";
-import { ShareBar } from "@/components/common/share-bar";
 import { ProgressBar } from "@/components/common/progress-bar";
-import { FormattedArticleBody } from "@/components/article/formatted-article-body";
-import { AffiliateBannerCard } from "@/components/article/affiliate-banner-card";
-import { TrendingWidget } from "@/components/common/trending-widget";
 import { Metadata } from "next";
 import { ArticleRepository } from "@/repositories/article.repository";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { BookmarkRepository } from "@/repositories/bookmark.repository";
 import { getArticleReactionsData } from "@/actions/engagement.actions";
-import { ArticleReactions } from "@/components/article/article-reactions";
-import { CommentSection } from "@/components/article/comment-section";
 import { prisma } from "@/lib/db/prisma";
-import Image from "next/image";
+import { InfiniteArticleFeed } from "@/components/article/infinite-article-feed";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -25,12 +18,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const description = article.seo?.description || article.excerpt;
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.thebytebulletin.com";
   const url = `${siteUrl}/news/${slug}`;
-  const keywords = article.seo?.keywords?.join(", ") || "";
 
   return {
     title,
     description,
-    keywords,
+    keywords: article.seo?.keywords?.join(", ") || "",
     alternates: {
       canonical: url,
     },
@@ -157,6 +149,13 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
     ]
   };
 
+  const initialArticleData = {
+    ...article,
+    reactionCounts,
+    userReaction,
+    comments,
+  };
+
   return (
     <>
       <script
@@ -164,86 +163,14 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <ProgressBar />
-      <article className="max-w-3xl mx-auto py-10 px-4 md:px-8">
-        <header className="mb-8">
-          <div className="flex items-center space-x-2 mb-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-primary">
-              {article.category?.name || "General"}
-            </span>
-            <span className="text-muted-foreground text-sm">•</span>
-            <span className="text-muted-foreground text-sm">{article.source.name}</span>
-          </div>
-          <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1]">
-            {article.title}
-          </h1>
-          <div className="flex items-center text-muted-foreground space-x-4 text-sm font-medium mb-6">
-            <time dateTime={article.publishedAt.toISOString()}>
-              {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-            </time>
-            <span>•</span>
-            <span>{Math.max(1, Math.ceil((article.content?.length || 1000) / 1000))} min read</span>
-          </div>
-          
-          {article.imageUrl && (
-            <div className="relative w-full aspect-video rounded-xl overflow-hidden my-8">
-              <Image 
-                src={article.imageUrl} 
-                alt={article.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 768px"
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
-        </header>
-        
-        {article.aiSummary && (
-          <AISummarySnippet
-            summary={article.aiSummary.summary}
-            summaryPoints={article.aiSummary.keyPoints}
-            sentiment={article.aiSummary.sentiment}
-          />
-        )}
-
-        <FormattedArticleBody
-          content={article.content}
-          excerpt={article.excerpt}
-          sourceName={article.source.name}
-          originalUrl={article.originalUrl}
-        />
-
-        {/* High-CPC Partner Offer Card */}
-        <AffiliateBannerCard categorySlug={article.category?.slug} />
-
-        <ShareBar 
-          url={`https://bytebulletin.com/news/${slug}`} 
-          title={article.title} 
-          articleId={article.id}
-          isAuthenticated={isAuthenticated}
-          initialIsBookmarked={initialIsBookmarked}
-        />
-
-        {/* Emoji Reactions Bar */}
-        <ArticleReactions
-          articleId={article.id}
-          initialCounts={reactionCounts}
-          initialUserReaction={userReaction}
-          isLoggedIn={isAuthenticated}
-        />
-
-        {/* Comments Section */}
-        <CommentSection
-          articleId={article.id}
-          initialComments={comments}
-          currentUser={session?.user}
-        />
-
-        {/* Trending Stories Widget */}
-        <div className="mt-12">
-          <TrendingWidget />
-        </div>
-      </article>
+      
+      <InfiniteArticleFeed
+        initialArticle={initialArticleData}
+        isAuthenticated={isAuthenticated}
+        initialIsBookmarked={initialIsBookmarked}
+        categorySlug={article.category?.slug}
+        maxAutoLoad={2}
+      />
     </>
   );
 }

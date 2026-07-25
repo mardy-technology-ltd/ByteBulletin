@@ -1,3 +1,5 @@
+"use client";
+
 import { Sparkles, CheckCircle2, Zap, Volume2 } from "lucide-react";
 import { AudioPlayer } from "@/components/ui/audio-player";
 import { Badge } from "@/components/ui/badge";
@@ -58,56 +60,55 @@ export function AISummarySnippet({
         {/* Header Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-violet-500/20">
+            <div className="p-2 rounded-xl bg-violet-500/20 border border-violet-500/30 text-violet-500 dark:text-violet-400 shadow-inner">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-heading font-extrabold text-lg tracking-tight text-foreground">
-                  AI Key Takeaways
+                <h3 className="font-heading font-extrabold text-base sm:text-lg tracking-tight text-foreground">
+                  ByteBulletin Executive Takeaways
                 </h3>
-                <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-extrabold border-violet-500/40 text-violet-500 bg-violet-500/10">
-                  <Zap className="w-3 h-3 mr-1 fill-current" /> AI Powered
-                </Badge>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 uppercase tracking-widest">
+                  AI-DISTILLED
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground">Synthesized summary of key facts</p>
+              <p className="text-xs text-muted-foreground">
+                30-Second Smart Briefing & Audio Digest
+              </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
             {getSentimentBadge(sentiment)}
-            <AudioPlayer text={textToRead} />
+            {/* Built-in Text to Speech Audio Player */}
+            {textToRead && <AudioPlayer text={textToRead} />}
           </div>
         </div>
 
-        {/* Executive Summary Paragraph (if available) */}
+        {/* Executive Summary Paragraph */}
         {summary && (
-          <p className="text-sm sm:text-base leading-relaxed text-foreground/90 font-medium italic bg-violet-500/5 dark:bg-violet-500/10 p-4 rounded-2xl border border-violet-500/15">
+          <p className="ai-summary-text text-sm sm:text-base text-foreground/90 leading-relaxed font-sans font-normal italic border-l-2 border-violet-500/50 pl-4 py-0.5">
             &ldquo;{summary}&rdquo;
           </p>
         )}
 
-        {/* Numbered Key Bullet Cards */}
+        {/* Bullet Key Points Grid */}
         {summaryPoints && summaryPoints.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="text-xs font-extrabold uppercase tracking-widest text-violet-500">
-              Core Takeaways
-            </h4>
-            <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-2.5 pt-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" /> Core Impact Points
+            </p>
+            <ul className="grid grid-cols-1 gap-2.5">
               {summaryPoints.map((point, index) => (
-                <div
+                <li
                   key={index}
-                  className="flex items-start space-x-3.5 p-3.5 sm:p-4 rounded-2xl border border-border/40 bg-background/50 hover:bg-card hover:border-violet-500/30 transition-all duration-200"
+                  className="flex items-start space-x-3 text-xs sm:text-sm text-foreground/95 bg-muted/40 hover:bg-muted/70 p-3 rounded-xl border border-border/30 transition-colors"
                 >
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-500/15 text-violet-500 dark:text-violet-400 font-extrabold text-xs shrink-0 mt-0.5 border border-violet-500/30">
-                    {index + 1 < 10 ? `0${index + 1}` : index + 1}
-                  </span>
-                  <p className="text-sm sm:text-base leading-relaxed text-foreground/90 font-medium">
-                    {point}
-                  </p>
-                </div>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <span className="leading-snug">{point}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
       </div>
