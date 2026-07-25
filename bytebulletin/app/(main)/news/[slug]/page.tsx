@@ -81,32 +81,33 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
 
   const session = await auth();
   const isAuthenticated = !!session?.user;
+  const userId = session?.user?.id;
   
-  let initialIsBookmarked = false;
-  if (session?.user?.id) {
-    initialIsBookmarked = await BookmarkRepository.isBookmarked(session.user.id, article.id);
-  }
+  // Parallelize secondary data fetching to reduce load time
+  const [initialIsBookmarked, reactionsData, commentsList] = await Promise.all([
+    userId ? BookmarkRepository.isBookmarked(userId, article.id) : Promise.resolve(false),
+    getArticleReactionsData(article.id, userId),
+    (async () => {
+      try {
+        const commentModel = (prisma as any)?.comment;
+        if (commentModel && typeof commentModel.findMany === "function") {
+          return await commentModel.findMany({
+            where: { articleId: article.id },
+            orderBy: { createdAt: "desc" },
+            include: {
+              user: { select: { id: true, name: true, image: true } },
+            },
+          });
+        }
+      } catch (err) {
+        console.error("Comments fetch error:", err);
+      }
+      return [];
+    })()
+  ]);
 
-  // Fetch reactions and comments
-  const { counts: reactionCounts, userReaction } = await getArticleReactionsData(article.id, session?.user?.id);
-
-  let comments: any[] = [];
-  try {
-    const commentModel = (prisma as any)?.comment;
-    if (commentModel && typeof commentModel.findMany === "function") {
-      comments = await commentModel.findMany({
-        where: { articleId: article.id },
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: {
-            select: { id: true, name: true, image: true },
-          },
-        },
-      });
-    }
-  } catch (err) {
-    console.error("Comments fetch error:", err);
-  }
+  const { counts: reactionCounts, userReaction } = reactionsData;
+  const comments = commentsList;
 
   // Enriched Multi-Schema JSON-LD Structured Data for Google News, Discover & AI Overviews
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.thebytebulletin.com";
