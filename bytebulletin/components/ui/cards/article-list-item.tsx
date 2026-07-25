@@ -25,6 +25,7 @@ export function ArticleListItem({
   return (
     <Link 
       href={`/news/${slug}`} 
+      prefetch={true}
       className="group flex flex-col sm:flex-row gap-5 py-5 border-b border-border/40 last:border-0 transition-all duration-300 hover:bg-card/50 hover:border-primary/30 px-3 sm:px-5 rounded-2xl -mx-3 sm:-mx-5 hover:shadow-xs"
     >
       <div className="relative aspect-[3/2] sm:w-48 md:w-56 shrink-0 overflow-hidden rounded-xl bg-muted border border-border/30">

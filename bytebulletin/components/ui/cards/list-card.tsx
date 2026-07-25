@@ -18,7 +18,7 @@ export function ListCard({
   index,
 }: ListCardProps) {
   return (
-    <Link href={`/news/${slug}`} className="group flex items-start space-x-4 py-4 border-b border-border/50 last:border-0 transition-colors hover:bg-muted/50 rounded-lg px-2 -mx-2">
+    <Link href={`/news/${slug}`} prefetch={true} className="group flex items-start space-x-4 py-4 border-b border-border/50 last:border-0 transition-colors hover:bg-muted/50 rounded-lg px-2 -mx-2">
       {typeof index === 'number' && (
         <span className="text-2xl font-heading font-extrabold text-muted-foreground/30 min-w-[2rem]">
           {index + 1}

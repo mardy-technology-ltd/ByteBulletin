@@ -24,6 +24,7 @@ export function FeaturedHeroCard({
   return (
     <Link 
       href={`/news/${slug}`} 
+      prefetch={true}
       className="group relative flex h-[60vh] min-h-[420px] w-full flex-col justify-end overflow-hidden rounded-3xl bg-muted border border-border/40 transition-all duration-500 hover:shadow-[0_0_35px_-5px_rgba(124,58,237,0.3)] hover:border-primary/40"
     >
       {imageUrl ? (

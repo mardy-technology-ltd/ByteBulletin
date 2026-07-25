@@ -24,7 +24,7 @@ export function ArticleCard({
   isAiSummarized = false,
 }: ArticleCardProps) {
   return (
-    <Link href={`/news/${slug}`} className="group flex flex-col space-y-3 relative overflow-hidden rounded-xl border bg-card transition-all hover:-translate-y-1 hover:shadow-md">
+    <Link href={`/news/${slug}`} prefetch={true} className="group flex flex-col space-y-3 relative overflow-hidden rounded-xl border bg-card transition-all hover:-translate-y-1 hover:shadow-md">
       {imageUrl && (
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
           <Image

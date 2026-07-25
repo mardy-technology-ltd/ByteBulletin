@@ -6,11 +6,16 @@ import { auth } from "@/lib/auth/config";
 import { BookmarkRepository } from "@/repositories/bookmark.repository";
 import { getArticleReactionsData } from "@/actions/engagement.actions";
 import { prisma } from "@/lib/db/prisma";
+import { cache } from "react";
 import { InfiniteArticleFeed } from "@/components/article/infinite-article-feed";
+
+const getCachedArticle = cache(async (slug: string) => {
+  return await ArticleRepository.getBySlug(slug);
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const article = await ArticleRepository.getBySlug(slug);
+  const article = await getCachedArticle(slug);
 
   if (!article) return {};
 
@@ -68,7 +73,7 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
   const { slug } = await params;
   
   // Fetch real article
-  const article = await ArticleRepository.getBySlug(slug);
+  const article = await getCachedArticle(slug);
   
   if (!article) {
     notFound();

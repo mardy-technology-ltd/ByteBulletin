@@ -25,6 +25,7 @@ export function FeaturedArticle({
   return (
     <Link 
       href={`/news/${slug}`} 
+      prefetch={true}
       className="group block relative overflow-hidden rounded-2xl border bg-card mb-8 shadow-sm transition-all hover:shadow-lg"
     >
       <div className="grid md:grid-cols-2 gap-0">

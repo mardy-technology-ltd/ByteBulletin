@@ -123,6 +123,7 @@ export function FeaturedHeroSlider({
         <Link
           key={current.slug}
           href={`/news/${current.slug}`}
+          prefetch={true}
           className="flex flex-col space-y-4 max-w-4xl cursor-pointer group/link"
         >
           {/* Category Badge & Published Time */}
