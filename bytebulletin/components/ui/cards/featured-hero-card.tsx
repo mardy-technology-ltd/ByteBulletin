@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils/date";
+import { defaultBlurDataURL } from "@/lib/utils/image";
 
 interface FeaturedHeroCardProps {
   id: string;
@@ -32,6 +33,8 @@ export function FeaturedHeroCard({
           fill
           sizes="100vw"
           className="absolute inset-0 object-cover transition-transform duration-700 group-hover:scale-105"
+          placeholder="blur"
+          blurDataURL={defaultBlurDataURL}
           priority
         />
       ) : (

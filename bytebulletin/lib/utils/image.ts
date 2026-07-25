@@ -80,3 +80,9 @@ export function getArticleImage(
   const index = Math.abs(hash) % images.length;
   return images[index];
 }
+
+/**
+ * A tiny 1x1 base64 string for image blur placeholders (slate color).
+ * Use this as `blurDataURL` in Next.js Image components for a smooth blur-up effect.
+ */
+export const defaultBlurDataURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/PjxfwAI8gOUQz5ZxgAAAABJRU5ErkJggg==";

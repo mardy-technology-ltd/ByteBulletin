@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { defaultBlurDataURL } from "@/lib/utils/image";
 import { ArrowRight, Sparkles, Clock, Tag } from "lucide-react";
 
 interface ShowcaseArticle {
@@ -78,6 +79,8 @@ export function CategoryShowcaseSection({ articles }: CategoryShowcaseSectionPro
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
+                placeholder="blur"
+                blurDataURL={defaultBlurDataURL}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-80" />
               <span className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-violet-600/90 text-white text-[10px] font-bold uppercase tracking-wider backdrop-blur-md">

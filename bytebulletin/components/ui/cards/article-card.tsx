@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils/date";
+import { defaultBlurDataURL } from "@/lib/utils/image";
 
 interface ArticleCardProps {
   id: string;
@@ -32,6 +33,8 @@ export function ArticleCard({
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            placeholder="blur"
+            blurDataURL={defaultBlurDataURL}
           />
         </div>
       )}

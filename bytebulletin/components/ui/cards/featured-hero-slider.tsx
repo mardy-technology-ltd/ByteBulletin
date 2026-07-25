@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils/date";
+import { defaultBlurDataURL } from "@/lib/utils/image";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
 export interface FeaturedHeroItem {
@@ -105,6 +106,8 @@ export function FeaturedHeroSlider({
           fill
           sizes="100vw"
           className="absolute inset-0 object-cover transition-all duration-700 group-hover:scale-105 animate-in fade-in zoom-in-95 duration-500"
+          placeholder="blur"
+          blurDataURL={defaultBlurDataURL}
           priority
         />
       ) : (

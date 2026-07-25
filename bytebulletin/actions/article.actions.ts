@@ -3,6 +3,7 @@
 import { ArticleRepository } from "@/repositories/article.repository";
 import { getArticleImage } from "@/lib/utils/image";
 import { prisma } from "@/lib/db/prisma";
+import { unstable_cache } from "next/cache";
 
 export interface FeedArticleItem {
   id: string;
@@ -23,7 +24,13 @@ export async function fetchMoreArticlesAction(
   skipCount?: number
 ): Promise<{ articles: FeedArticleItem[]; hasMore: boolean; nextPage: number | null }> {
   try {
-    const result = await ArticleRepository.getPaginatedLatest(page, limit, excludeId, skipCount);
+    const getCachedArticles = unstable_cache(
+      async (p, l, eId, sCount) => ArticleRepository.getPaginatedLatest(p, l, eId, sCount),
+      [`feed-latest-${page}-${limit}-${excludeId || 'none'}-${skipCount || 0}`],
+      { revalidate: 60 } // Cache feed for 60 seconds
+    );
+
+    const result = await getCachedArticles(page, limit, excludeId, skipCount);
 
     const formattedArticles: FeedArticleItem[] = result.articles.map((article: any) => ({
       id: article.id,
@@ -60,7 +67,13 @@ export async function fetchMoreCategoryArticlesAction(
   skipCount?: number
 ): Promise<{ articles: FeedArticleItem[]; hasMore: boolean; nextPage: number | null }> {
   try {
-    const result = await ArticleRepository.getPaginatedByCategory(categorySlug, page, limit, excludeId, skipCount);
+    const getCachedCategoryArticles = unstable_cache(
+      async (slug, p, l, eId, sCount) => ArticleRepository.getPaginatedByCategory(slug, p, l, eId, sCount),
+      [`feed-category-${categorySlug}-${page}-${limit}-${excludeId || 'none'}-${skipCount || 0}`],
+      { revalidate: 60 }
+    );
+
+    const result = await getCachedCategoryArticles(categorySlug, page, limit, excludeId, skipCount);
 
     const formattedArticles: FeedArticleItem[] = result.articles.map((article: any) => ({
       id: article.id,
@@ -96,18 +109,26 @@ export async function searchArticlesAction(query: string): Promise<FeedArticleIt
   if (!query || query.trim().length < 2) return [];
 
   try {
-    const articles = await prisma.article.findMany({
-      where: {
-        status: "PUBLISHED",
-        OR: [
-          { title: { contains: query.trim(), mode: "insensitive" } },
-          { excerpt: { contains: query.trim(), mode: "insensitive" } },
-        ],
+    const getCachedArticles = unstable_cache(
+      async (q: string) => {
+        return prisma.article.findMany({
+          where: {
+            status: "PUBLISHED",
+            OR: [
+              { title: { contains: q, mode: "insensitive" } },
+              { excerpt: { contains: q, mode: "insensitive" } },
+            ],
+          },
+          take: 6,
+          orderBy: { publishedAt: "desc" },
+          include: { source: true, category: true, aiSummary: true },
+        });
       },
-      take: 6,
-      orderBy: { publishedAt: "desc" },
-      include: { source: true, category: true, aiSummary: true },
-    });
+      [`search-${query.trim().toLowerCase()}`],
+      { revalidate: 300 } // Cache search results for 5 minutes
+    );
+
+    const articles = await getCachedArticles(query.trim());
 
     return articles.map((article: any) => ({
       id: article.id,
@@ -117,7 +138,7 @@ export async function searchArticlesAction(query: string): Promise<FeedArticleIt
       imageUrl: getArticleImage(article.imageUrl, article.category?.slug, article.id),
       sourceName: article.source.name,
       categoryName: article.category?.name || "General",
-      publishedAt: article.publishedAt.toISOString(),
+      publishedAt: new Date(article.publishedAt).toISOString(),
       isAiSummarized: !!article.aiSummary,
     }));
   } catch (error) {

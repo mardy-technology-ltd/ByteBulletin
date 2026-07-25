@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { defaultBlurDataURL } from "@/lib/utils/image";
 import { AISummarySnippet } from "@/components/common/ai-summary-snippet";
 import { ShareBar } from "@/components/common/share-bar";
 import { FormattedArticleBody } from "@/components/article/formatted-article-body";
@@ -118,6 +119,8 @@ export function SingleArticleView({
               fill
               sizes="(max-width: 768px) 100vw, 768px"
               className="object-cover"
+              placeholder="blur"
+              blurDataURL={defaultBlurDataURL}
               priority={!isAutoLoaded}
             />
           </div>
