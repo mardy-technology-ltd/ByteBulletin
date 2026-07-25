@@ -50,25 +50,34 @@ export function LiveSearchModal() {
 
   // Debounced real-time search trigger
   useEffect(() => {
-    if (!query.trim()) {
+    if (!query.trim() || query.trim().length < 2) {
       setResults([]);
       setIsLoading(false);
       return;
     }
 
+    let isActive = true;
     setIsLoading(true);
+    
     const handler = setTimeout(async () => {
       try {
         const data = await searchArticlesAction(query);
-        setResults(data);
+        if (isActive) {
+          setResults(data);
+        }
       } catch (err) {
         console.error("Live search error:", err);
       } finally {
-        setIsLoading(false);
+        if (isActive) {
+          setIsLoading(false);
+        }
       }
-    }, 250);
+    }, 300); // Slightly longer debounce
 
-    return () => clearTimeout(handler);
+    return () => {
+      isActive = false;
+      clearTimeout(handler);
+    };
   }, [query]);
 
   // Keyboard navigation within search results list
@@ -149,7 +158,7 @@ export function LiveSearchModal() {
             </div>
 
             {/* Results Container */}
-            <div className="overflow-y-auto p-3 space-y-2 flex-1 divide-y divide-border/20">
+            <div className={`overflow-y-auto p-3 space-y-2 flex-1 divide-y divide-border/20 transition-opacity duration-200 ${isLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
               {results.length > 0 ? (
                 results.map((item, index) => (
                   <Link
