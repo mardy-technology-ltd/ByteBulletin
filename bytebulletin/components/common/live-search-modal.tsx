@@ -176,7 +176,7 @@ export function LiveSearchModal() {
                           {item.categoryName || "News"}
                         </span>
                         <span>•</span>
-                        <span>{new Date(item.publishedAt).toLocaleDateString()}</span>
+                        <span>{new Date(item.publishedAt).toLocaleDateString("en-US")}</span>
                       </div>
                       <h4 className="text-sm font-bold text-foreground line-clamp-2 leading-snug">
                         {item.title}

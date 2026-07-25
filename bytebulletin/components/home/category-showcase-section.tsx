@@ -98,7 +98,7 @@ export function CategoryShowcaseSection({ articles }: CategoryShowcaseSectionPro
               <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3 text-violet-400" />
-                  {new Date(article.publishedAt).toLocaleDateString()}
+                  {new Date(article.publishedAt).toLocaleDateString("en-US")}
                 </span>
                 <span className="flex items-center gap-1 text-violet-500 font-bold group-hover:translate-x-0.5 transition-transform">
                   Read <ArrowRight className="w-3 h-3" />
