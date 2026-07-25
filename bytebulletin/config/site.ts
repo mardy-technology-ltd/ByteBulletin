@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 
+const defaultSiteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://bytebulletin.com";
+const defaultOgImage = `${defaultSiteUrl}/api/og?title=${encodeURIComponent("ByteBulletin — AI-Powered Tech News & Real-Time Bulletins")}&category=${encodeURIComponent("TECH & AI NEWS")}&source=${encodeURIComponent("ByteBulletin")}`;
+
 export const siteConfig = {
   name: "ByteBulletin",
   description:
     "AI-powered news aggregator delivering the world's top stories with Gemini-powered summaries, curated by category, in real time.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thebytebulletin.com",
-  ogImage: "/og-image.png",
+  url: defaultSiteUrl,
+  ogImage: defaultOgImage,
   links: {
     twitter: "https://twitter.com/bytebulletin",
     github: "https://github.com/bytebulletin",
@@ -44,7 +47,7 @@ export const defaultMetadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: siteConfig.url,
-    title: siteConfig.name,
+    title: `${siteConfig.name} — AI-Powered Tech News & Real-Time Bulletins`,
     description: siteConfig.description,
     siteName: siteConfig.name,
     images: [
@@ -58,7 +61,7 @@ export const defaultMetadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.name,
+    title: `${siteConfig.name} — AI-Powered Tech News & Real-Time Bulletins`,
     description: siteConfig.description,
     images: [siteConfig.ogImage],
     creator: "@bytebulletin",
