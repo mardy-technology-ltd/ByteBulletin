@@ -6,12 +6,26 @@ import { auth } from "@/lib/auth/config";
 import { BookmarkRepository } from "@/repositories/bookmark.repository";
 import { getArticleReactionsData } from "@/actions/engagement.actions";
 import { prisma } from "@/lib/db/prisma";
-import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { InfiniteArticleFeed } from "@/components/article/infinite-article-feed";
 
-const getCachedArticle = cache(async (slug: string) => {
-  return await ArticleRepository.getBySlug(slug);
-});
+const getGlobalCachedArticle = unstable_cache(
+  async (slug: string) => {
+    return await ArticleRepository.getBySlug(slug);
+  },
+  ['article-by-slug-cache'],
+  { revalidate: 300 } // Cache for 5 minutes globally
+);
+
+const getCachedArticle = async (slug: string) => {
+  const article = await getGlobalCachedArticle(slug);
+  if (article) {
+    if (typeof article.publishedAt === "string") article.publishedAt = new Date(article.publishedAt);
+    if (typeof article.updatedAt === "string") article.updatedAt = new Date(article.updatedAt);
+    if (typeof article.createdAt === "string") article.createdAt = new Date(article.createdAt);
+  }
+  return article;
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
