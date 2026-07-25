@@ -214,56 +214,75 @@ export class ArticleRepository {
 
   /**
    * Fetches a single article by slug with detailed relations.
+   * Handles URL-encoded slugs and base64 hash suffix mismatches.
    */
   static async getBySlug(slug: string) {
     if (!slug) return null;
-    const decoded = decodeURIComponent(slug);
 
-    // 1. Try exact findUnique
+    // Decode any URL encoding (e.g. %2D -> -)
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(slug);
+    } catch {
+      decoded = slug;
+    }
+
+    const includeClause = {
+      source: true,
+      category: true,
+      tags: true,
+      aiSummary: true,
+      seo: true,
+    };
+
+    // 1. Exact match on original slug
     let article = await prisma.article.findUnique({
       where: { slug },
-      include: {
-        source: true,
-        category: true,
-        tags: true,
-        aiSummary: true,
-        seo: true,
-      },
+      include: includeClause,
     });
+    if (article) return article;
 
-    // 2. Fallback to decoded slug
-    if (!article && decoded !== slug) {
+    // 2. Exact match on decoded slug
+    if (decoded !== slug) {
       article = await prisma.article.findUnique({
         where: { slug: decoded },
-        include: {
-          source: true,
-          category: true,
-          tags: true,
-          aiSummary: true,
-          seo: true,
-        },
+        include: includeClause,
       });
+      if (article) return article;
     }
 
-    // 3. Fallback to case-insensitive matching
-    if (!article) {
+    // 3. Prefix search: strip the last "-xxxxxx" hash suffix (6-char base64 hash added by ingester)
+    // e.g. "zelenskyy-accuses-russia-ahr0ch" -> search by "zelenskyy-accuses-russia"
+    const slugForPrefix = decoded || slug;
+    const lastHyphen = slugForPrefix.lastIndexOf("-");
+    if (lastHyphen > 0) {
+      const prefix = slugForPrefix.substring(0, lastHyphen);
       article = await prisma.article.findFirst({
         where: {
-          OR: [
-            { slug: { equals: slug, mode: "insensitive" } },
-            { slug: { equals: decoded, mode: "insensitive" } },
-          ],
+          slug: { startsWith: prefix },
         },
-        include: {
-          source: true,
-          category: true,
-          tags: true,
-          aiSummary: true,
-          seo: true,
-        },
+        orderBy: { publishedAt: "desc" },
+        include: includeClause,
       });
+      if (article) return article;
     }
 
-    return article;
+    // 4. Broader prefix: strip last two segments (in case title had a hyphen near end)
+    if (lastHyphen > 0) {
+      const secondLastHyphen = slugForPrefix.lastIndexOf("-", lastHyphen - 1);
+      if (secondLastHyphen > 0) {
+        const broaderPrefix = slugForPrefix.substring(0, secondLastHyphen);
+        article = await prisma.article.findFirst({
+          where: {
+            slug: { startsWith: broaderPrefix },
+          },
+          orderBy: { publishedAt: "desc" },
+          include: includeClause,
+        });
+        if (article) return article;
+      }
+    }
+
+    return null;
   }
 }
