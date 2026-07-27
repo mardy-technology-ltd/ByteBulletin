@@ -12,7 +12,7 @@ const groq = createGroq({
 // The strict JSON Schema for the AI output
 const ArticleEnhancementSchema = z.object({
   summary: z.string().describe("A concise 2-3 sentence overview of the article."),
-  keyPoints: z.array(z.string()).describe("An array of 4-5 critical bullet points summarizing key facts."),
+  keyPoints: z.array(z.string()).describe("An array of 2 to 6 critical bullet points summarizing key facts, dynamically scaled based on article length without repetition."),
   seoTitle: z.string().describe("A click-optimized, highly searchable title under 60 characters."),
   metaDescription: z.string().describe("An SEO-optimized summary under 160 characters."),
   ogDescription: z.string().describe("An engaging description for social media sharing."),
@@ -45,26 +45,65 @@ export async function processArticleWithAI(articleId: string) {
     return { success: false, reason: "Already processed" };
   }
 
-  // 2. Prepare the prompt context
+  // 2. Fetch full scraped content if original URL exists
+  let fullText = article.content || article.excerpt || "";
+  
+  if (article.originalUrl) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const htmlRes = await fetch(article.originalUrl, {
+        signal: controller.signal,
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
+      });
+      clearTimeout(timeoutId);
+
+      if (htmlRes.ok) {
+        const html = await htmlRes.text();
+        const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        if (bodyMatch && bodyMatch[1]) {
+          // Use sanitize-html to strip all HTML tags
+          const sanitizeHtml = require("sanitize-html");
+          const cleanText = sanitizeHtml(bodyMatch[1], {
+            allowedTags: [],
+            allowedAttributes: {}
+          }).replace(/\s+/g, " ").trim();
+          
+          if (cleanText.length > 500) {
+            fullText = cleanText.substring(0, 40000); // 40k chars max for context window
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[AI Processing] Failed to scrape full text for ${article.originalUrl}`);
+    }
+  }
+
+  // 3. Prepare the prompt context
   const prompt = `
     You are a senior technical editor and SEO expert.
     Analyze the following article from "${article.source.name}".
     
     Title: ${article.title}
-    Content: ${article.content || article.excerpt}
+    Content: ${fullText}
     
     Generate the structured JSON enhancement data for this article following the exact schema provided.
     Tailor the summary for a US-based audience. Highlight implications for the US market, economy, or consumers if applicable.
+    
+    CRITICAL INSTRUCTION FOR BULLET POINTS:
+    - Dynamically scale the number of bullet points based on the article's length and depth.
+    - Generate 2-3 points for short news, and 4-6 points for long, detailed reports.
+    - Ensure absolutely NO repetition across the bullet points. Each point must be unique and highly informative.
   `;
 
   try {
-    // 3. Call Groq via AI SDK using generateText
+    // 4. Call Groq via AI SDK using generateText
     const { text, usage } = await generateText({
       model: groq("llama-3.1-8b-instant"),
       prompt: prompt + `\n\nIMPORTANT: Return ONLY a valid JSON object matching this exact structure:
 {
   "summary": "A concise 2-3 sentence overview",
-  "keyPoints": ["point 1", "point 2", "point 3"],
+  "keyPoints": ["point 1", "point 2", "... up to 6 depending on length"],
   "seoTitle": "A click-optimized title under 60 characters",
   "metaDescription": "An SEO-optimized summary under 160 characters",
   "ogDescription": "An engaging description for social media",
