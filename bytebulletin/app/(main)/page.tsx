@@ -19,12 +19,21 @@ export default async function Home() {
   const featuredHeroes = await ArticleRepository.getFeaturedHeroes(5);
   const primaryHeroId = featuredHeroes[0]?.id;
 
-  // Fetch all required data in parallel for performance
+  // Fetch core data in parallel
   const [latestResult, trendingArticles, breakingNews] = await Promise.all([
     ArticleRepository.getPaginatedLatest(1, 8, primaryHeroId),
     ArticleRepository.getTrending(5),
-    ArticleRepository.getBreakingNews(6),
+    ArticleRepository.getBreakingNews(6)
   ]);
+
+  // Fetch showcase articles per category sequentially to avoid DB connection timeouts
+  const showcaseCategories = ["technology", "business", "science", "world"];
+  const categoryResults = [];
+  for (const cat of showcaseCategories) {
+    const result = await ArticleRepository.getByCategory(cat, 1, 6);
+    categoryResults.push(result);
+  }
+  const showcaseData = categoryResults.flat();
 
   // Format breaking news for the ticker directly from featured stories
   const tickerItems = featuredHeroes.map((item: any) => ({
@@ -58,7 +67,7 @@ export default async function Home() {
   }));
 
   // Articles for the Category Showcase section
-  const showcaseArticles = latestResult.articles.map((a: any) => ({
+  const showcaseArticles = showcaseData.map((a: any) => ({
     id: a.id,
     title: a.title,
     slug: a.slug,

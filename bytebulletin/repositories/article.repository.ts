@@ -54,7 +54,7 @@ export class ArticleRepository {
       orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
-        category: { select: { slug: true } },
+        category: { select: { slug: true, name: true } },
         aiSummary: { select: { id: true } },
       },
     });
@@ -77,7 +77,7 @@ export class ArticleRepository {
       orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
-        category: { select: { slug: true } },
+        category: { select: { slug: true, name: true } },
         aiSummary: { select: { id: true } },
       },
     });
@@ -150,7 +150,7 @@ export class ArticleRepository {
       orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
-        category: { select: { slug: true } },
+        category: { select: { slug: true, name: true } },
         aiSummary: { select: { id: true } },
       },
     });
@@ -174,7 +174,7 @@ export class ArticleRepository {
       orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
-        category: { select: { slug: true } },
+        category: { select: { slug: true, name: true } },
         aiSummary: { select: { id: true } },
       },
     });
@@ -206,7 +206,7 @@ export class ArticleRepository {
       orderBy: { publishedAt: "desc" },
       include: {
         source: { select: { name: true } },
-        category: { select: { slug: true } },
+        category: { select: { slug: true, name: true } },
         aiSummary: { select: { id: true } },
       },
     });
