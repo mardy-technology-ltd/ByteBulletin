@@ -1,57 +1,34 @@
 /**
  * High-quality fallback images from Unsplash curated by category.
  */
-const CATEGORY_IMAGES: Record<string, string[]> = {
-  technology: [
-    "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&q=80&w=1000",
-  ],
-  business: [
-    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&q=80&w=1000",
-  ],
-  science: [
-    "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1614935151651-0bea6508abb0?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1518152006812-edab29b069ac?auto=format&fit=crop&q=80&w=1000",
-  ],
-  health: [
-    "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=1000",
-  ],
-  sports: [
-    "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1483721310020-03333e577078?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&q=80&w=1000",
-  ],
-  world: [
-    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1473649085228-583485e6e4d7?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1529655683823-dc58689736f4?auto=format&fit=crop&q=80&w=1000",
-  ],
-  default: [
-    "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1504465039710-0f49c0a47eb7?auto=format&fit=crop&q=80&w=1000",
-    "https://images.unsplash.com/photo-1572949645841-094f3a9c4c94?auto=format&fit=crop&q=80&w=1000",
-  ]
+const CATEGORY_GRADIENTS: Record<string, [string, string]> = {
+  technology: ["#4F46E5", "#06B6D4"], // Indigo to Cyan
+  business: ["#0F172A", "#334155"],   // Slate Dark
+  science: ["#7C3AED", "#EC4899"],    // Violet to Pink
+  health: ["#10B981", "#3B82F6"],     // Emerald to Blue
+  sports: ["#F97316", "#EAB308"],     // Orange to Yellow
+  world: ["#0369A1", "#0284C7"],      // Ocean Blue
+  default: ["#6366F1", "#8B5CF6"],    // Indigo to Violet
 };
+
+/**
+ * Generates a beautiful SVG gradient data URI.
+ */
+function generateGradientSvg(color1: string, color2: string, text: string = ""): string {
+  const svg = `
+    <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${color1};stop-opacity:1" />
+          <stop offset="100%" style="stop-color:${color2};stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grad)" />
+      ${text ? `<text x="50%" y="50%" font-family="sans-serif" font-size="64" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle" opacity="0.5">${text}</text>` : ''}
+    </svg>
+  `;
+  return `data:image/svg+xml;base64,${Buffer.from(svg.trim()).toString('base64')}`;
+}
 
 /**
  * Returns a deterministic fallback image URL if the original is missing or invalid.
@@ -61,24 +38,19 @@ export function getArticleImage(
   categorySlug: string = 'default',
   articleId: string = ''
 ): string {
-  if (originalUrl && originalUrl.trim() !== '') {
+  // If original URL exists and doesn't look like a tracking pixel
+  if (originalUrl && originalUrl.trim() !== '' && !originalUrl.includes('1x1') && !originalUrl.includes('pixel')) {
     return originalUrl;
   }
 
-  // Normalize category slug
   const normalizedCategory = categorySlug.toLowerCase();
+  const [c1, c2] = CATEGORY_GRADIENTS[normalizedCategory] || CATEGORY_GRADIENTS['default'];
   
-  // Select the image array (default if category not found)
-  const images = CATEGORY_IMAGES[normalizedCategory] || CATEGORY_IMAGES['default'];
+  const label = normalizedCategory !== 'default' 
+    ? normalizedCategory.charAt(0).toUpperCase() + normalizedCategory.slice(1)
+    : 'ByteBulletin';
 
-  // Deterministically pick an image based on the article ID so it stays consistent
-  let hash = 0;
-  for (let i = 0; i < articleId.length; i++) {
-    hash = articleId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  const index = Math.abs(hash) % images.length;
-  return images[index];
+  return generateGradientSvg(c1, c2, label);
 }
 
 /**

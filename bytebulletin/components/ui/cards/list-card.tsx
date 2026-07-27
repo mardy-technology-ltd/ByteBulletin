@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils/date";
+import { decodeHtmlEntities } from "@/lib/utils/string";
 
 interface ListCardProps {
   id: string;
@@ -26,7 +27,7 @@ export function ListCard({
       )}
       <div className="flex flex-col flex-1 space-y-1">
         <h4 className="font-heading text-base font-semibold leading-tight group-hover:text-primary transition-colors line-clamp-2">
-          {title}
+          {decodeHtmlEntities(title)}
         </h4>
         <div className="flex items-center text-xs text-muted-foreground space-x-2">
           <span className="font-medium">{sourceName}</span>

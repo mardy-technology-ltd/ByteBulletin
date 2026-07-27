@@ -46,6 +46,31 @@ export async function ingestRssFeed(sourceId: string) {
       const wordCount = parsed.content.split(/\s+/).length;
       const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
+      let finalImageUrl = parsed.imageUrl;
+      if (!finalImageUrl) {
+        try {
+          // Attempt to scrape og:image from the actual article URL
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
+          const htmlRes = await fetch(parsed.originalUrl, {
+            signal: controller.signal,
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+          });
+          clearTimeout(timeoutId);
+
+          if (htmlRes.ok) {
+            const html = await htmlRes.text();
+            const ogMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i) || 
+                            html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
+            if (ogMatch && ogMatch[1]) {
+              finalImageUrl = ogMatch[1];
+            }
+          }
+        } catch (scrapeErr) {
+          console.warn(`[Ingester] Failed to scrape og:image for ${parsed.originalUrl}`);
+        }
+      }
+
       try {
         const article = await prisma.article.upsert({
           where: { originalUrl: parsed.originalUrl },
@@ -53,7 +78,7 @@ export async function ingestRssFeed(sourceId: string) {
             title: parsed.title,
             excerpt: parsed.excerpt,
             content: parsed.content,
-            imageUrl: parsed.imageUrl,
+            imageUrl: finalImageUrl,
           },
           create: {
             title: parsed.title,
@@ -61,7 +86,7 @@ export async function ingestRssFeed(sourceId: string) {
             excerpt: parsed.excerpt,
             content: parsed.content,
             originalUrl: parsed.originalUrl,
-            imageUrl: parsed.imageUrl,
+            imageUrl: finalImageUrl,
             author: parsed.author,
             publishedAt: parsed.publishedAt,
             sourceId: source.id,

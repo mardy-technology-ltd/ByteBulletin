@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils/date";
 import { defaultBlurDataURL } from "@/lib/utils/image";
-
+import { decodeHtmlEntities } from "@/lib/utils/string";
 interface FeaturedHeroCardProps {
   id: string;
   title: string;
@@ -53,11 +53,11 @@ export function FeaturedHeroCard({
           </span>
         </div>
         <h2 className="font-heading text-2xl sm:text-4xl md:text-5xl font-extrabold leading-[1.15] text-white drop-shadow-md group-hover:text-violet-100 transition-colors">
-          {title}
+          {decodeHtmlEntities(title)}
         </h2>
         {excerpt && (
           <p className="max-w-2xl text-base sm:text-lg text-gray-200/90 line-clamp-2 drop-shadow-sm leading-relaxed">
-            {excerpt}
+            {decodeHtmlEntities(excerpt)}
           </p>
         )}
       </div>

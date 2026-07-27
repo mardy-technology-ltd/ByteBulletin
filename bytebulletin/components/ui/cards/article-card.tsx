@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils/date";
 import { defaultBlurDataURL } from "@/lib/utils/image";
+import { decodeHtmlEntities } from "@/lib/utils/string";
 
 interface ArticleCardProps {
   id: string;
@@ -50,11 +51,11 @@ export function ArticleCard({
           )}
         </div>
         <h3 className="font-heading text-lg font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
-          {title}
+          {decodeHtmlEntities(title)}
         </h3>
         {excerpt && (
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-            {excerpt}
+            {decodeHtmlEntities(excerpt)}
           </p>
         )}
         <div className="mt-auto pt-4 flex items-center text-xs text-muted-foreground">

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils/date";
+import { decodeHtmlEntities } from "@/lib/utils/string";
 
 interface ArticleListItemProps {
   id: string;
@@ -51,12 +52,12 @@ export function ArticleListItem({
         </div>
         
         <h3 className="font-heading text-lg md:text-xl font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2 mb-2 tracking-tight">
-          {title}
+          {decodeHtmlEntities(title)}
         </h3>
         
         {excerpt && (
           <p className="line-clamp-2 text-sm text-muted-foreground/90 mb-3 leading-relaxed">
-            {excerpt}
+            {decodeHtmlEntities(excerpt)}
           </p>
         )}
         

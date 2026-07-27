@@ -6,6 +6,7 @@ import Link from "next/link";
 import { timeAgo } from "@/lib/utils/date";
 import { defaultBlurDataURL } from "@/lib/utils/image";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { decodeHtmlEntities } from "@/lib/utils/string";
 
 export interface FeaturedHeroItem {
   id: string;
@@ -139,13 +140,13 @@ export function FeaturedHeroSlider({
 
           {/* Title */}
           <h2 className="font-heading text-2xl sm:text-4xl md:text-5xl font-extrabold leading-[1.15] text-white drop-shadow-lg group-hover/link:text-violet-200 transition-colors animate-in fade-in slide-in-from-bottom-3 duration-300">
-            {current.title}
+            {decodeHtmlEntities(current.title)}
           </h2>
 
           {/* Excerpt */}
           {current.excerpt && (
             <p className="text-sm sm:text-base md:text-lg text-gray-200/90 line-clamp-2 drop-shadow-sm leading-relaxed max-w-3xl">
-              {current.excerpt}
+              {decodeHtmlEntities(current.excerpt)}
             </p>
           )}
         </Link>

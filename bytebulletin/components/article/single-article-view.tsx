@@ -11,6 +11,7 @@ import { CommentSection } from "@/components/article/comment-section";
 import { TrendingWidget } from "@/components/common/trending-widget";
 import { RelatedArticles } from "@/components/article/related-articles";
 import { ReactionType } from "@prisma/client";
+import { decodeHtmlEntities } from "@/lib/utils/string";
 
 export interface SingleArticleData {
   id: string;
@@ -72,7 +73,7 @@ export function SingleArticleView({
     <article 
       id={`article-${article.slug}`}
       data-slug={article.slug}
-      data-title={article.seo?.title || article.title}
+      data-title={decodeHtmlEntities(article.seo?.title || article.title)}
       className={`max-w-5xl mx-auto py-10 px-4 md:px-8 ${
         isAutoLoaded ? "border-t border-border/60 pt-16 mt-16" : ""
       }`}
@@ -97,7 +98,7 @@ export function SingleArticleView({
         </div>
 
         <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1]">
-          {article.title}
+          {decodeHtmlEntities(article.title)}
         </h1>
 
         <div className="flex items-center text-muted-foreground space-x-4 text-sm font-medium mb-6">
@@ -116,7 +117,7 @@ export function SingleArticleView({
           <div className="relative w-full aspect-video rounded-xl overflow-hidden my-8">
             <Image
               src={article.imageUrl}
-              alt={article.title}
+              alt={decodeHtmlEntities(article.title)}
               fill
               sizes="(max-width: 768px) 100vw, 768px"
               className="object-cover"
@@ -148,7 +149,7 @@ export function SingleArticleView({
       <div className="max-w-3xl mx-auto w-full">
         <ShareBar
           url={articleUrl}
-          title={article.title}
+          title={decodeHtmlEntities(article.title)}
           articleId={article.id}
           isAuthenticated={isAuthenticated}
           initialIsBookmarked={initialIsBookmarked}

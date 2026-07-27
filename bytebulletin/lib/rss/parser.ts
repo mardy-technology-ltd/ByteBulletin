@@ -1,6 +1,7 @@
 import Parser from "rss-parser";
 import sanitizeHtml from "sanitize-html";
 import { parse as parseUrl } from "url";
+import { decodeHtmlEntities } from "@/lib/utils/string";
 
 // Custom fields to extract from RSS items
 type CustomItem = {
@@ -112,9 +113,9 @@ export async function fetchAndParseRSS(feedUrl: string): Promise<ParsedArticle[]
       const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
 
       return {
-        title: item.title || "Untitled Article",
+        title: decodeHtmlEntities(item.title || "Untitled Article"),
         originalUrl: item.link || item.guid || "",
-        excerpt,
+        excerpt: decodeHtmlEntities(excerpt),
         content: cleanedContent,
         imageUrl,
         author,
