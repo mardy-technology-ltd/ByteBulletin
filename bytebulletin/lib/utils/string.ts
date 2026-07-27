@@ -77,3 +77,20 @@ export function decodeHtmlEntities(text: string): string {
     return match;
   });
 }
+
+/**
+ * Extracts key topics from a title for stock image generation.
+ */
+export function extractKeywords(text: string, count: number = 3): string {
+  if (!text) return "technology,news";
+  const stopWords = new Set(["a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "as", "is", "are", "was", "were", "be", "been", "being", "it", "this", "that", "these", "those", "have", "has", "had", "do", "does", "did", "not", "no", "how", "why", "when", "where", "what", "who", "which", "from", "about"]);
+  
+  const words = text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stopWords.has(w));
+    
+  if (words.length === 0) return "technology,news";
+  return words.slice(0, count).join(",");
+}

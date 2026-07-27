@@ -1,15 +1,7 @@
 /**
- * High-quality fallback images from Unsplash curated by category.
+ * Predefined fallback categories for stock images if specific category fails.
  */
-const CATEGORY_GRADIENTS: Record<string, [string, string]> = {
-  technology: ["#4F46E5", "#06B6D4"], // Indigo to Cyan
-  business: ["#0F172A", "#334155"],   // Slate Dark
-  science: ["#7C3AED", "#EC4899"],    // Violet to Pink
-  health: ["#10B981", "#3B82F6"],     // Emerald to Blue
-  sports: ["#F97316", "#EAB308"],     // Orange to Yellow
-  world: ["#0369A1", "#0284C7"],      // Ocean Blue
-  default: ["#6366F1", "#8B5CF6"],    // Indigo to Violet
-};
+const FALLBACK_CATEGORIES = ["technology", "business", "science", "health", "sports", "world"];
 
 /**
  * Generates a beautiful SVG gradient data URI.
@@ -35,22 +27,21 @@ function generateGradientSvg(color1: string, color2: string, text: string = ""):
  */
 export function getArticleImage(
   originalUrl: string | null | undefined, 
-  categorySlug: string = 'default',
+  categorySlug: string = 'news',
   articleId: string = ''
 ): string {
   // If original URL exists and doesn't look like a tracking pixel
-  if (originalUrl && originalUrl.trim() !== '' && !originalUrl.includes('1x1') && !originalUrl.includes('pixel')) {
+  if (originalUrl && originalUrl.trim() !== '' && !originalUrl.includes('1x1') && !originalUrl.includes('pixel') && !originalUrl.startsWith('data:image/svg+xml')) {
     return originalUrl;
   }
 
-  const normalizedCategory = categorySlug.toLowerCase();
-  const [c1, c2] = CATEGORY_GRADIENTS[normalizedCategory] || CATEGORY_GRADIENTS['default'];
+  const keyword = categorySlug && categorySlug !== 'default' ? categorySlug.toLowerCase() : 'news';
   
-  const label = normalizedCategory !== 'default' 
-    ? normalizedCategory.charAt(0).toUpperCase() + normalizedCategory.slice(1)
-    : 'ByteBulletin';
-
-  return generateGradientSvg(c1, c2, label);
+  // Create a pseudo-random seed using the article ID so the image is deterministic
+  // (LoremFlickr caches by lock ID)
+  const lockId = articleId ? articleId.replace(/\D/g, '').slice(0, 5) || '1' : '1';
+  
+  return `https://loremflickr.com/800/600/${keyword}?lock=${lockId}`;
 }
 
 /**
@@ -58,3 +49,28 @@ export function getArticleImage(
  * Use this as `blurDataURL` in Next.js Image components for a smooth blur-up effect.
  */
 export const defaultBlurDataURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/PjxfwAI8gOUQz5ZxgAAAABJRU5ErkJggg==";
+
+/**
+ * Upgrades known low-resolution image URLs to their high-resolution variants.
+ * Handles BBC, WordPress thumbnails, and other common patterns.
+ */
+export function upgradeImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+
+  let upgradedUrl = url;
+
+  // 1. Handle BBC News (e.g., ichef.bbci.co.uk/news/240/cpsprodpb/...)
+  if (upgradedUrl.includes('ichef.bbci.co.uk')) {
+    // Replace resolution identifiers like /240/ or /320/ or /480/ with /1024/
+    upgradedUrl = upgradedUrl.replace(/\/(?:240|320|400|480|640|800)\//, '/1024/');
+  }
+
+  // 2. Handle WordPress Thumbnails (e.g., image-150x150.jpg -> image.jpg)
+  // Matches - followed by 2 to 4 digits, an 'x', 2 to 4 digits, before the extension.
+  const wpThumbRegex = /-(\d{2,4})x(\d{2,4})\.(jpg|jpeg|png|webp|gif)$/i;
+  if (wpThumbRegex.test(upgradedUrl)) {
+    upgradedUrl = upgradedUrl.replace(wpThumbRegex, '.$3');
+  }
+
+  return upgradedUrl;
+}

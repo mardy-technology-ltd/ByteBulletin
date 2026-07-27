@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
 import { fetchAndParseRSS } from "./parser";
 import { FetchStatus } from "@prisma/client";
+import { upgradeImageUrl } from "@/lib/utils/image";
+import { extractKeywords } from "@/lib/utils/string";
 
 /**
  * Generates a URL-safe slug from a string.
@@ -69,6 +71,15 @@ export async function ingestRssFeed(sourceId: string) {
         } catch (scrapeErr) {
           console.warn(`[Ingester] Failed to scrape og:image for ${parsed.originalUrl}`);
         }
+      }
+
+      // Upgrade URL to high-resolution if it matches known patterns
+      finalImageUrl = upgradeImageUrl(finalImageUrl);
+      
+      // If still no image, use a keyword-based stock photo fallback
+      if (!finalImageUrl) {
+        const keywords = extractKeywords(parsed.title);
+        finalImageUrl = `https://loremflickr.com/800/600/${keywords}`;
       }
 
       try {
