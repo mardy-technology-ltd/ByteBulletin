@@ -9,6 +9,7 @@ import { AffiliateBannerCard } from "@/components/article/affiliate-banner-card"
 import { ArticleReactions } from "@/components/article/article-reactions";
 import { CommentSection } from "@/components/article/comment-section";
 import { TrendingWidget } from "@/components/common/trending-widget";
+import { RelatedArticles } from "@/components/article/related-articles";
 import { ReactionType } from "@prisma/client";
 
 export interface SingleArticleData {
@@ -162,6 +163,11 @@ export function SingleArticleView({
       <CommentSection
         articleId={article.id}
         initialComments={article.comments || []}
+      />
+
+      <RelatedArticles
+        currentArticleId={article.id}
+        categorySlug={article.category?.slug}
       />
 
       {!isAutoLoaded && (

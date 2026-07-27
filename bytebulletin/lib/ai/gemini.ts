@@ -54,6 +54,7 @@ export async function processArticleWithAI(articleId: string) {
     Content: ${article.content || article.excerpt}
     
     Generate the structured JSON enhancement data for this article following the exact schema provided.
+    Tailor the summary for a US-based audience. Highlight implications for the US market, economy, or consumers if applicable.
   `;
 
   try {
