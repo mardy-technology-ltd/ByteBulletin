@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { defaultMetadata } from "@/config/site";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { GoogleReaderRevenue } from "@/components/monetization/google-reader-revenue";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,6 +28,12 @@ export default function RootLayout({
       <head>
         <GoogleAnalytics />
         <GoogleReaderRevenue />
+        <Script
+          id="adsbygoogle-init"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4297897511967409"
+        />
       </head>
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`} suppressHydrationWarning>
         <ThemeProvider
