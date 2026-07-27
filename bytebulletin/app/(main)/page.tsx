@@ -10,6 +10,7 @@ import { FeedArticleItem } from "@/actions/article.actions";
 import { TechMarketWidget } from "@/components/home/tech-market-widget";
 import { CategoryShowcaseSection } from "@/components/home/category-showcase-section";
 import { InlineCtaBanner } from "@/components/home/inline-cta-banner";
+import { TrendingTags } from "@/components/home/trending-tags";
 
 // ISR: Revalidate the homepage every 60 seconds
 export const revalidate = 60;
@@ -87,6 +88,8 @@ export default async function Home() {
                   View all
                 </Link>
               </div>
+
+              <TrendingTags />
               
               {initialFormattedArticles.length > 0 ? (
                 <>
