@@ -30,6 +30,9 @@ export type SiteConfig = typeof siteConfig;
 
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
+  other: {
+    "google-adsense-account": "ca-pub-4297897511967409",
+  },
   title: {
     default: `${siteConfig.name} — AI-Powered News Aggregator`,
     template: `%s — ${siteConfig.name}`,
