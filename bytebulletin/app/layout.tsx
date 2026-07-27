@@ -6,6 +6,7 @@ import { defaultMetadata } from "@/config/site";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { GoogleReaderRevenue } from "@/components/monetization/google-reader-revenue";
 import Script from "next/script";
+import { OneSignalInitializer } from "@/components/common/onesignal-initializer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,8 +35,13 @@ export default function RootLayout({
           crossOrigin="anonymous"
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4297897511967409"
         />
+        <Script 
+          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" 
+          strategy="beforeInteractive"
+        />
       </head>
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`} suppressHydrationWarning>
+        <OneSignalInitializer />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
