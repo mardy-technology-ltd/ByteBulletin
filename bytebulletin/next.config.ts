@@ -8,14 +8,13 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig: NextConfig = {
   // ── Images ──────────────────────────────────────────────────
   images: {
-    formats: ["image/avif", "image/webp"],
+    unoptimized: true, // Disables Vercel's built-in Image Optimization (saves the 5,000 monthly limit)
     remotePatterns: [
       // Google avatars (OAuth)
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       // Common news image CDNs
       { protocol: "https", hostname: "**" },
     ],
-    minimumCacheTTL: 3600, // 1 hour
   },
 
   // ── Security Headers ─────────────────────────────────────────
