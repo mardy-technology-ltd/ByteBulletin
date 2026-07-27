@@ -73,7 +73,7 @@ export function SingleArticleView({
       id={`article-${article.slug}`}
       data-slug={article.slug}
       data-title={article.seo?.title || article.title}
-      className={`max-w-3xl mx-auto py-10 px-4 md:px-8 ${
+      className={`max-w-5xl mx-auto py-10 px-4 md:px-8 ${
         isAutoLoaded ? "border-t border-border/60 pt-16 mt-16" : ""
       }`}
     >
@@ -145,25 +145,27 @@ export function SingleArticleView({
 
       <AffiliateBannerCard categorySlug={article.category?.slug} />
 
-      <ShareBar
-        url={articleUrl}
-        title={article.title}
-        articleId={article.id}
-        isAuthenticated={isAuthenticated}
-        initialIsBookmarked={initialIsBookmarked}
-      />
+      <div className="max-w-3xl mx-auto w-full">
+        <ShareBar
+          url={articleUrl}
+          title={article.title}
+          articleId={article.id}
+          isAuthenticated={isAuthenticated}
+          initialIsBookmarked={initialIsBookmarked}
+        />
 
-      <ArticleReactions
-        articleId={article.id}
-        initialCounts={reactionCounts}
-        initialUserReaction={article.userReaction}
-        isLoggedIn={isAuthenticated}
-      />
+        <ArticleReactions
+          articleId={article.id}
+          initialCounts={reactionCounts}
+          initialUserReaction={article.userReaction}
+          isLoggedIn={isAuthenticated}
+        />
 
-      <CommentSection
-        articleId={article.id}
-        initialComments={article.comments || []}
-      />
+        <CommentSection
+          articleId={article.id}
+          initialComments={article.comments || []}
+        />
+      </div>
 
       <RelatedArticles
         currentArticleId={article.id}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Share2, Link as LinkIcon, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "./bookmark-button";
@@ -15,6 +15,13 @@ interface ShareBarProps {
 
 export function ShareBar({ url, title, articleId, isAuthenticated, initialIsBookmarked }: ShareBarProps) {
   const [copied, setCopied] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      setCanNativeShare(true);
+    }
+  }, []);
 
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
@@ -93,7 +100,7 @@ export function ShareBar({ url, title, articleId, isAuthenticated, initialIsBook
         </span>
 
         {/* Native Mobile Share Button */}
-        {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+        {canNativeShare && (
           <Button
             variant="outline"
             size="sm"

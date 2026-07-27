@@ -90,7 +90,7 @@ export function FormattedArticleBody({
   }, [content, excerpt, originalUrl]);
 
   return (
-    <div className="space-y-8 my-8 font-sans leading-relaxed">
+    <div className="max-w-3xl mx-auto space-y-8 my-8 font-sans leading-relaxed">
       {/* Structured Justified Paragraphs */}
       <div className="space-y-6 sm:space-y-8 text-base sm:text-lg md:text-[19px] leading-[1.85] tracking-normal text-justify text-slate-900 dark:text-slate-200">
         {paragraphs.map((paragraph, index) => {

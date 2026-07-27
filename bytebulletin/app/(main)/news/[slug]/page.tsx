@@ -201,6 +201,7 @@ export default async function NewsDetailsPage({ params }: NewsDetailsPageProps) 
     <>
       <script
         type="application/ld+json"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <ProgressBar />
