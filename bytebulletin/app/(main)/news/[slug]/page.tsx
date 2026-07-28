@@ -44,13 +44,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const dynamicOgUrl = `${siteUrl}/api/og?title=${encodeURIComponent(title)}&category=${encodeURIComponent(categoryName)}&source=${encodeURIComponent(sourceName)}`;
 
   const ogImages = [
+    ...(article.imageUrl ? [{ url: article.imageUrl }] : []),
     {
       url: dynamicOgUrl,
       width: 1200,
       height: 630,
       alt: title,
     },
-    ...(article.imageUrl ? [{ url: article.imageUrl }] : []),
   ];
 
   return {
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: "summary_large_image",
       title,
       description,
-      images: [dynamicOgUrl],
+      images: [article.imageUrl || dynamicOgUrl],
     },
   };
 }
