@@ -51,7 +51,7 @@ export async function GET() {
 
     return new NextResponse(rssFeed, {
       headers: {
-        "Content-Type": "application/xml; charset=utf-8",
+        "Content-Type": "application/rss+xml; charset=utf-8",
         "Cache-Control": "s-maxage=60, stale-while-revalidate",
       },
     });
