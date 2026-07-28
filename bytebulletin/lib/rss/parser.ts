@@ -69,30 +69,35 @@ function extractExcerpt(html: string, length = 150): string {
   return text.substring(0, length).trim() + "...";
 }
 
-/**
- * Tries various strategies to find an image in an RSS item.
- */
 function extractImageUrl(item: any): string | null {
+  let url: string | null = null;
   // 1. Enclosure
   if (item.enclosure?.url && item.enclosure.type?.startsWith("image/")) {
-    return item.enclosure.url;
+    url = item.enclosure.url;
   }
   // 2. Media Content
-  if (item["media:content"]?.$?.url) {
-    return item["media:content"].$.url;
+  else if (item["media:content"]?.$?.url) {
+    url = item["media:content"].$.url;
   }
   // 3. Media Thumbnail
-  if (item["media:thumbnail"]?.$?.url) {
-    return item["media:thumbnail"].$.url;
+  else if (item["media:thumbnail"]?.$?.url) {
+    url = item["media:thumbnail"].$.url;
   }
   // 4. Try parsing <img> tag from content
-  const content = item["content:encoded"] || item.content || item.description || "";
-  const imgMatch = content.match(/<img[^>]+src="([^">]+)"/);
-  if (imgMatch && imgMatch[1]) {
-    return imgMatch[1];
+  else {
+    const content = item["content:encoded"] || item.content || item.description || "";
+    const imgMatch = content.match(/<img[^>]+src="([^">]+)"/);
+    if (imgMatch && imgMatch[1]) {
+      url = imgMatch[1];
+    }
   }
 
-  return null;
+  // Google News often injects their own generic logo in the feed, reject it so we scrape the real one
+  if (url && (url.includes('googleusercontent.com') || url.includes('favicon') || url.includes('news.google.com'))) {
+    return null;
+  }
+
+  return url;
 }
 
 export async function fetchAndParseRSS(feedUrl: string): Promise<ParsedArticle[]> {
