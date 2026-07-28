@@ -35,13 +35,10 @@ export function getArticleImage(
     return originalUrl;
   }
 
-  const keyword = categorySlug && categorySlug !== 'default' ? categorySlug.toLowerCase() : 'news';
+  // Create a unique seed using the article ID so the image is deterministic
+  const seed = articleId || 'default-seed';
   
-  // Create a pseudo-random seed using the article ID so the image is deterministic
-  // (LoremFlickr caches by lock ID)
-  const lockId = articleId ? articleId.replace(/\D/g, '').slice(0, 5) || '1' : '1';
-  
-  return `https://loremflickr.com/800/600/${keyword}?lock=${lockId}`;
+  return `https://picsum.photos/seed/${seed}/800/600`;
 }
 
 /**

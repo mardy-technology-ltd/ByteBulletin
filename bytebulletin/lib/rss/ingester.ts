@@ -3,6 +3,25 @@ import { fetchAndParseRSS } from "./parser";
 import { FetchStatus } from "@prisma/client";
 import { upgradeImageUrl } from "@/lib/utils/image";
 import { extractKeywords } from "@/lib/utils/string";
+import crypto from "crypto";
+
+async function resolveUrl(url: string): Promise<string> {
+  if (!url.includes("news.google.com")) return url;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(url, {
+      method: "HEAD", // Fast HEAD request to follow redirects without downloading body
+      redirect: "follow",
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+    });
+    clearTimeout(timeoutId);
+    return res.url; // Returns the final resolved destination URL
+  } catch (err) {
+    return url;
+  }
+}
 
 /**
  * Generates a URL-safe slug from a string.
@@ -42,7 +61,7 @@ export async function ingestRssFeed(sourceId: string) {
     // 3. Upsert Articles
     for (const parsed of itemsToProcess) {
       const baseSlug = generateSlug(parsed.title);
-      const urlHash = Buffer.from(parsed.originalUrl).toString("base64").substring(0, 6).toLowerCase().replace(/[^a-z0-9]/g, 'x');
+      const urlHash = crypto.createHash('md5').update(parsed.originalUrl).digest('hex').substring(0, 6);
       const uniqueSlug = `${baseSlug}-${urlHash}`;
 
       const wordCount = parsed.content.split(/\s+/).length;
@@ -52,9 +71,10 @@ export async function ingestRssFeed(sourceId: string) {
       if (!finalImageUrl) {
         try {
           // Attempt to scrape og:image from the actual article URL
+          const resolvedUrl = await resolveUrl(parsed.originalUrl);
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 4000);
-          const htmlRes = await fetch(parsed.originalUrl, {
+          const htmlRes = await fetch(resolvedUrl, {
             signal: controller.signal,
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
           });
@@ -65,7 +85,10 @@ export async function ingestRssFeed(sourceId: string) {
             const ogMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i) || 
                             html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
             if (ogMatch && ogMatch[1]) {
-              finalImageUrl = ogMatch[1];
+              const matchedUrl = ogMatch[1];
+              if (!matchedUrl.includes('googleusercontent.com') && !matchedUrl.includes('news.google.com')) {
+                finalImageUrl = matchedUrl;
+              }
             }
           }
         } catch (scrapeErr) {
@@ -76,10 +99,9 @@ export async function ingestRssFeed(sourceId: string) {
       // Upgrade URL to high-resolution if it matches known patterns
       finalImageUrl = upgradeImageUrl(finalImageUrl);
       
-      // If still no image, use a keyword-based stock photo fallback
+      // If still no image, use a unique placeholder fallback to avoid identical cat images
       if (!finalImageUrl) {
-        const keywords = extractKeywords(parsed.title);
-        finalImageUrl = `https://loremflickr.com/800/600/${keywords}`;
+        finalImageUrl = `https://picsum.photos/seed/${urlHash}/800/600`;
       }
 
       try {
