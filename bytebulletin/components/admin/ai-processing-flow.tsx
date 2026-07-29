@@ -100,7 +100,7 @@ export function AiProcessingFlow() {
 
   const startProcessing = () => {
     if (isProcessing) return;
-    
+
     setIsProcessing(true);
     setLogs((prev) => [
       ...prev,
@@ -184,9 +184,9 @@ export function AiProcessingFlow() {
         </div>
         */}
       </CardHeader>
-      
+
       <CardContent className="p-0">
-        <div 
+        <div
           ref={scrollRef}
           className="h-[350px] w-full overflow-y-auto bg-slate-950 p-4 font-mono text-xs leading-relaxed"
         >
