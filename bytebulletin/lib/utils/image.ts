@@ -22,6 +22,32 @@ function generateGradientSvg(color1: string, color2: string, text: string = ""):
   return `data:image/svg+xml;base64,${Buffer.from(svg.trim()).toString('base64')}`;
 }
 
+const CATEGORY_IMAGES: Record<string, string[]> = {
+  technology: [
+    "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
+  ],
+  business: [
+    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80",
+  ],
+  science: [
+    "https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=1200&q=80",
+  ],
+  health: [
+    "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80",
+  ],
+  sports: [
+    "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80",
+  ],
+  world: [
+    "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80",
+  ],
+  news: [
+    "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80",
+  ],
+};
+
 /**
  * Returns a deterministic fallback image URL if the original is missing or invalid.
  */
@@ -35,10 +61,19 @@ export function getArticleImage(
     return originalUrl;
   }
 
-  // Create a unique seed using the article ID so the image is deterministic
-  const seed = articleId || 'default-seed';
-  
-  return `https://picsum.photos/seed/${seed}/800/600`;
+  const categoryKey = (categorySlug || 'news').toLowerCase();
+  const pool = CATEGORY_IMAGES[categoryKey] || CATEGORY_IMAGES.news;
+
+  // Simple string hash for deterministic selection
+  let hash = 0;
+  const seedStr = articleId || 'default-seed';
+  for (let i = 0; i < seedStr.length; i++) {
+    hash = (hash << 5) - hash + seedStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % pool.length;
+
+  return pool[index];
 }
 
 /**
@@ -54,19 +89,24 @@ export const defaultBlurDataURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA
 export function upgradeImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
 
-  let upgradedUrl = url;
+  let upgradedUrl = url.trim();
 
   // 1. Handle BBC News (e.g., ichef.bbci.co.uk/news/240/cpsprodpb/...)
-  if (upgradedUrl.includes('ichef.bbci.co.uk')) {
+  if (upgradedUrl.includes("ichef.bbci.co.uk")) {
     // Replace resolution identifiers like /240/ or /320/ or /480/ with /1024/
-    upgradedUrl = upgradedUrl.replace(/\/(?:240|320|400|480|640|800)\//, '/1024/');
+    upgradedUrl = upgradedUrl.replace(/\/(?:240|320|400|480|640|800)\//, "/1024/");
   }
 
   // 2. Handle WordPress Thumbnails (e.g., image-150x150.jpg -> image.jpg)
   // Matches - followed by 2 to 4 digits, an 'x', 2 to 4 digits, before the extension.
   const wpThumbRegex = /-(\d{2,4})x(\d{2,4})\.(jpg|jpeg|png|webp|gif)$/i;
   if (wpThumbRegex.test(upgradedUrl)) {
-    upgradedUrl = upgradedUrl.replace(wpThumbRegex, '.$3');
+    upgradedUrl = upgradedUrl.replace(wpThumbRegex, ".$3");
+  }
+
+  // 3. Handle WordPress Jetpack/Photon CDN resize params (e.g., i0.wp.com/.../image.jpg?resize=150%2C150)
+  if (upgradedUrl.includes("wp.com") || upgradedUrl.includes("wp-content")) {
+    upgradedUrl = upgradedUrl.replace(/([?&])(?:resize|w|h|fit)=\d+(?:%2C\d+)?/gi, "$1").replace(/[?&]&+/g, "?").replace(/[?&]$/, "");
   }
 
   return upgradedUrl;

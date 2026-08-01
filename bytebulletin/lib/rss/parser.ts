@@ -70,34 +70,68 @@ function extractExcerpt(html: string, length = 150): string {
 }
 
 function extractImageUrl(item: any): string | null {
-  let url: string | null = null;
+  const candidates: string[] = [];
+
+  // Helper to extract url from media items
+  const pushMediaUrl = (mediaObj: any) => {
+    if (!mediaObj) return;
+    if (Array.isArray(mediaObj)) {
+      mediaObj.forEach(pushMediaUrl);
+    } else if (mediaObj.$?.url) {
+      candidates.push(mediaObj.$.url);
+    } else if (typeof mediaObj.url === "string") {
+      candidates.push(mediaObj.url);
+    }
+  };
+
   // 1. Enclosure
   if (item.enclosure?.url && item.enclosure.type?.startsWith("image/")) {
-    url = item.enclosure.url;
+    candidates.push(item.enclosure.url);
   }
+
   // 2. Media Content
-  else if (item["media:content"]?.$?.url) {
-    url = item["media:content"].$.url;
-  }
+  pushMediaUrl(item["media:content"]);
+
   // 3. Media Thumbnail
-  else if (item["media:thumbnail"]?.$?.url) {
-    url = item["media:thumbnail"].$.url;
-  }
-  // 4. Try parsing <img> tag from content
-  else {
-    const content = item["content:encoded"] || item.content || item.description || "";
-    const imgMatch = content.match(/<img[^>]+src="([^">]+)"/);
-    if (imgMatch && imgMatch[1]) {
-      url = imgMatch[1];
+  pushMediaUrl(item["media:thumbnail"]);
+
+  // 4. Try parsing <img> tag attributes (src, data-src, data-original, srcset) from HTML content
+  const content = item["content:encoded"] || item.content || item.description || "";
+  if (content) {
+    const imgRegex = /<img[^>]+(?:src|data-src|data-original)=["']([^"']+)["']/gi;
+    let match;
+    while ((match = imgRegex.exec(content)) !== null) {
+      if (match[1]) candidates.push(match[1]);
+    }
+
+    const srcsetRegex = /<img[^>]+srcset=["']([^"'\s]+)/gi;
+    while ((match = srcsetRegex.exec(content)) !== null) {
+      if (match[1]) candidates.push(match[1]);
     }
   }
 
-  // Google News often injects their own generic logo in the feed, reject it so we scrape the real one
-  if (url && (url.includes('googleusercontent.com') || url.includes('favicon') || url.includes('news.google.com'))) {
-    return null;
+  // Filter candidates
+  for (let url of candidates) {
+    if (!url || typeof url !== "string") continue;
+    url = url.trim();
+
+    // Reject tracking pixels, icons, logos, and Google News placeholders
+    const isBadUrl =
+      url.includes("1x1") ||
+      url.includes("tracking") ||
+      url.includes("pixel") ||
+      url.includes("feedburner") ||
+      url.includes("googleusercontent.com") ||
+      url.includes("favicon") ||
+      url.includes("news.google.com") ||
+      url.startsWith("data:image/");
+
+    if (!isBadUrl) {
+      return url;
+    }
   }
 
-  return url;
+  return null;
 }
 
 export async function fetchAndParseRSS(feedUrl: string): Promise<ParsedArticle[]> {

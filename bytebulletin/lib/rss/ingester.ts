@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { fetchAndParseRSS } from "./parser";
 import { FetchStatus } from "@prisma/client";
-import { upgradeImageUrl } from "@/lib/utils/image";
+import { upgradeImageUrl, getArticleImage } from "@/lib/utils/image";
 import { extractKeywords } from "@/lib/utils/string";
 import crypto from "crypto";
 
@@ -52,6 +52,100 @@ async function resolveUrl(url: string): Promise<string> {
 }
 
 /**
+ * Scrapes og:image, twitter:image, and JSON-LD schema images with proper browser impersonation headers.
+ */
+async function scrapeArticleMetaImage(rawUrl: string): Promise<string | null> {
+  try {
+    const targetUrl = await resolveUrl(rawUrl);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+    const response = await fetch(targetUrl, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
+      },
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+
+    const html = await response.text();
+    const candidates: string[] = [];
+
+    // 1. Meta og:image / og:image:secure_url
+    const ogRegex = /<meta\s+(?:property|name)=["']og:image(?::secure_url)?["']\s+content=["']([^"']+)["']/gi;
+    let match;
+    while ((match = ogRegex.exec(html)) !== null) {
+      if (match[1]) candidates.push(match[1]);
+    }
+    const ogRegexReverse = /<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image(?::secure_url)?["']/gi;
+    while ((match = ogRegexReverse.exec(html)) !== null) {
+      if (match[1]) candidates.push(match[1]);
+    }
+
+    // 2. Meta twitter:image
+    const twRegex = /<meta\s+(?:property|name)=["']twitter:image(?::src)?["']\s+content=["']([^"']+)["']/gi;
+    while ((match = twRegex.exec(html)) !== null) {
+      if (match[1]) candidates.push(match[1]);
+    }
+    const twRegexReverse = /<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']twitter:image(?::src)?["']/gi;
+    while ((match = twRegexReverse.exec(html)) !== null) {
+      if (match[1]) candidates.push(match[1]);
+    }
+
+    // 3. JSON-LD ImageObject
+    const jsonLdRegex = /<script\s+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+    while ((match = jsonLdRegex.exec(html)) !== null) {
+      try {
+        const json = JSON.parse(match[1]);
+        const findImageInObject = (obj: any) => {
+          if (!obj) return;
+          if (typeof obj === "string" && obj.startsWith("http")) candidates.push(obj);
+          else if (Array.isArray(obj)) obj.forEach(findImageInObject);
+          else if (typeof obj === "object") {
+            if (obj.image) findImageInObject(obj.image);
+            if (obj.url && typeof obj.url === "string" && obj["@type"] === "ImageObject") candidates.push(obj.url);
+          }
+        };
+        findImageInObject(json);
+      } catch (e) {
+        // Ignore JSON parse errors
+      }
+    }
+
+    // 4. Primary <article> <img> fallback
+    const articleImgMatch = html.match(/<article[^>]*>[\s\S]*?<img[^>]+src=["']([^"']+)["']/i);
+    if (articleImgMatch && articleImgMatch[1]) {
+      candidates.push(articleImgMatch[1]);
+    }
+
+    // Filter candidate URLs
+    for (let url of candidates) {
+      if (!url) continue;
+      url = url.replace(/&amp;/g, "&").trim();
+      if (
+        !url.includes("1x1") &&
+        !url.includes("pixel") &&
+        !url.includes("googleusercontent.com") &&
+        !url.includes("news.google.com") &&
+        !url.startsWith("data:")
+      ) {
+        return url;
+      }
+    }
+  } catch (scrapeErr) {
+    console.warn(`[Ingester] Failed to scrape image for ${rawUrl}:`, scrapeErr);
+  }
+  return null;
+}
+
+/**
  * Generates a URL-safe slug from a string.
  */
 function generateSlug(text: string): string {
@@ -97,39 +191,15 @@ export async function ingestRssFeed(sourceId: string) {
 
       let finalImageUrl = parsed.imageUrl;
       if (!finalImageUrl) {
-        try {
-          // Attempt to scrape og:image from the actual article URL
-          const resolvedUrl = await resolveUrl(parsed.originalUrl);
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 4000);
-          const htmlRes = await fetch(resolvedUrl, {
-            signal: controller.signal,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-          });
-          clearTimeout(timeoutId);
-
-          if (htmlRes.ok) {
-            const html = await htmlRes.text();
-            const ogMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["']/i) || 
-                            html.match(/<meta\s+content=["']([^"']+)["']\s+(?:property|name)=["']og:image["']/i);
-            if (ogMatch && ogMatch[1]) {
-              const matchedUrl = ogMatch[1];
-              if (!matchedUrl.includes('googleusercontent.com') && !matchedUrl.includes('news.google.com')) {
-                finalImageUrl = matchedUrl;
-              }
-            }
-          }
-        } catch (scrapeErr) {
-          console.warn(`[Ingester] Failed to scrape og:image for ${parsed.originalUrl}`);
-        }
+        finalImageUrl = await scrapeArticleMetaImage(parsed.originalUrl);
       }
 
       // Upgrade URL to high-resolution if it matches known patterns
       finalImageUrl = upgradeImageUrl(finalImageUrl);
       
-      // If still no image, use a unique placeholder fallback to avoid identical cat images
+      // If still no image, use high quality category fallback image
       if (!finalImageUrl) {
-        finalImageUrl = `https://picsum.photos/seed/${urlHash}/800/600`;
+        finalImageUrl = getArticleImage(null, 'news', uniqueSlug);
       }
 
       try {
